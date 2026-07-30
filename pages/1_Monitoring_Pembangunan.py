@@ -5,8 +5,12 @@ import plotly.graph_objects as go
 from utils.load_data import load_master
 from utils.styling import inject_custom_css, render_metric_card, render_custom_sidebar
 
-# Page configuration (Managed by Home.py)
-
+# Page configuration
+st.set_page_config(
+    page_title="Monitoring Pembangunan - Jawa Timur",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # Initialize theme mode in session state if not present
 if "theme_mode" not in st.session_state:
@@ -15,9 +19,6 @@ if "theme_mode" not in st.session_state:
 # Inject dynamic theme CSS
 inject_custom_css(st.session_state["theme_mode"])
 chart_theme = "plotly_dark" if st.session_state["theme_mode"] == "Gelap" else "plotly_white"
-
-# Render custom sidebar
-render_custom_sidebar("Monitoring")
 
 # Load master data
 df = load_master()
