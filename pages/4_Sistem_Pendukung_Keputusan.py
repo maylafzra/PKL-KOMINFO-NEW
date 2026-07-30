@@ -13,12 +13,8 @@ try:
 except ImportError:
     use_xgb = False
 
-# Page Config
-st.set_page_config(
-    page_title="Sistem Pendukung Keputusan - Jawa Timur",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Page Config (Managed by Home.py)
+
 
 # Initialize theme mode in session state if not present
 if "theme_mode" not in st.session_state:

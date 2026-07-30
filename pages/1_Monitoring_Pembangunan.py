@@ -5,12 +5,8 @@ import plotly.graph_objects as go
 from utils.load_data import load_master
 from utils.styling import inject_custom_css, render_metric_card, render_custom_sidebar
 
-# Page configuration
-st.set_page_config(
-    page_title="Monitoring Pembangunan - Jawa Timur",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Page configuration (Managed by Home.py)
+
 
 # Initialize theme mode in session state if not present
 if "theme_mode" not in st.session_state:

@@ -8,12 +8,8 @@ import json
 from utils.load_data import load_master
 from utils.styling import inject_custom_css, render_custom_sidebar
 
-# Page Configuration
-st.set_page_config(
-    page_title="Analisis Spasial - Jawa Timur",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Page Configuration (Managed by Home.py)
+
 
 # Initialize theme mode in session state if not present
 if "theme_mode" not in st.session_state:

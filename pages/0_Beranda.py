@@ -3,12 +3,8 @@ from pathlib import Path
 import streamlit as st
 from utils.styling import inject_custom_css, render_theme_selector
 
-# Page Configuration (For st.Page compatibility, this can run independently)
-st.set_page_config(
-    page_title="Dashboard Pembangunan Jawa Timur",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Page Configuration (Managed by Home.py)
+
 
 # Initialize global theme mode in session state
 if "theme_mode" not in st.session_state:
