@@ -8,8 +8,12 @@ import json
 from utils.load_data import load_master
 from utils.styling import inject_custom_css, render_custom_sidebar
 
-# Page Configuration (Managed by Home.py)
-
+# Page Configuration
+st.set_page_config(
+    page_title="Analisis Spasial - Jawa Timur",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # Initialize theme mode in session state if not present
 if "theme_mode" not in st.session_state:
@@ -18,7 +22,9 @@ if "theme_mode" not in st.session_state:
 # Inject dynamic theme CSS
 inject_custom_css(st.session_state["theme_mode"])
 chart_theme = "plotly_dark" if st.session_state["theme_mode"] == "Gelap" else "plotly_white"
-mapbox_style = "carto-darkmatter" if st.session_state["theme_mode"] == "Gelap" else "carto-positron"
+mapbox_style = "carto-positron" # Carto positron provides the most readable base map for labels
+if st.session_state["theme_mode"] == "Gelap":
+    mapbox_style = "carto-darkmatter"
 
 # Render custom sidebar
 render_custom_sidebar("Spasial")
@@ -134,6 +140,9 @@ for i in range(num_regions):
 df_yr['lisa_cluster'] = lisa_types
 df_yr['kode_wilayah_str'] = df_yr['kode_wilayah'].astype(str)
 
+# Label text color based on theme
+text_label_color = "#1e293b" if st.session_state["theme_mode"] != "Gelap" else "#f8fafc"
+
 # Layout Grid (2/3 Left Map, 1/3 Right Insights Panel)
 col_left, col_right = st.columns([2, 1])
 
@@ -157,8 +166,29 @@ with col_left:
                 mapbox_style=mapbox_style,
                 center={"lat": -7.7, "lon": 112.5},
                 zoom=6.8,
+                hover_name='nama_wilayah', # Menampilkan nama kabupaten/kota sebagai judul tooltip hover
+                hover_data={
+                    'kode_wilayah_str': False, # Menyembunyikan kode wilayah agar lebih bersih
+                    selected_ind: True
+                },
                 title=f"Peta Sebaran {indicators[selected_ind]} ({selected_year})"
             )
+            # Add text labels on map centroids
+            fig.add_trace(go.Scattermapbox(
+                lat=df_yr['lat'],
+                lon=df_yr['lon'],
+                mode='text',
+                text=df_yr['nama_wilayah'],
+                textposition='middle center',
+                textfont=dict(
+                    size=8,
+                    color=text_label_color,
+                    family='Inter, sans-serif',
+                    weight='bold'
+                ),
+                showlegend=False,
+                hoverinfo='skip'
+            ))
             fig.update_layout(template=chart_theme, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0, r=0, t=40, b=0))
             st.plotly_chart(fig, use_container_width=True)
         else:
@@ -169,6 +199,17 @@ with col_left:
                 hover_name='nama_wilayah', size_max=25, zoom=7,
                 title=f"Distribusi Spasial {indicators[selected_ind]} ({selected_year})"
             )
+            # Add text labels
+            fig.add_trace(go.Scattermapbox(
+                lat=df_yr['lat'],
+                lon=df_yr['lon'],
+                mode='text',
+                text=df_yr['nama_wilayah'],
+                textposition='top center',
+                textfont=dict(size=8, color=text_label_color, family='Inter, sans-serif'),
+                showlegend=False,
+                hoverinfo='skip'
+            ))
             fig.update_layout(mapbox_style=mapbox_style, template=chart_theme, margin=dict(l=0, r=0, t=40, b=0))
             st.plotly_chart(fig, use_container_width=True)
     else:
@@ -186,8 +227,30 @@ with col_left:
                 mapbox_style=mapbox_style,
                 center={"lat": -7.7, "lon": 112.5},
                 zoom=6.8,
+                hover_name='nama_wilayah', # Menampilkan nama kabupaten/kota sebagai judul tooltip hover
+                hover_data={
+                    'kode_wilayah_str': False, # Menyembunyikan kode wilayah agar lebih bersih
+                    'lisa_cluster': True,
+                    selected_ind: True
+                },
                 title=f"Peta Klaster LISA {indicators[selected_ind]} ({selected_year})"
             )
+            # Add text labels on map centroids
+            fig.add_trace(go.Scattermapbox(
+                lat=df_yr['lat'],
+                lon=df_yr['lon'],
+                mode='text',
+                text=df_yr['nama_wilayah'],
+                textposition='middle center',
+                textfont=dict(
+                    size=8,
+                    color=text_label_color,
+                    family='Inter, sans-serif',
+                    weight='bold'
+                ),
+                showlegend=False,
+                hoverinfo='skip'
+            ))
             fig.update_layout(template=chart_theme, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=0, r=0, t=40, b=0))
             st.plotly_chart(fig, use_container_width=True)
         else:
@@ -203,6 +266,17 @@ with col_left:
                 hover_name='nama_wilayah', size_max=25, zoom=7,
                 title=f"Klaster LISA {indicators[selected_ind]} ({selected_year})"
             )
+            # Add text labels
+            fig.add_trace(go.Scattermapbox(
+                lat=df_yr['lat'],
+                lon=df_yr['lon'],
+                mode='text',
+                text=df_yr['nama_wilayah'],
+                textposition='top center',
+                textfont=dict(size=8, color=text_label_color, family='Inter, sans-serif'),
+                showlegend=False,
+                hoverinfo='skip'
+            ))
             fig.update_layout(mapbox_style=mapbox_style, template=chart_theme, margin=dict(l=0, r=0, t=40, b=0))
             st.plotly_chart(fig, use_container_width=True)
 
