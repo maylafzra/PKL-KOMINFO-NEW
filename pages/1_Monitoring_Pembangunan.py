@@ -14,7 +14,6 @@ inject_custom_css(st.session_state["theme_mode"])
 chart_theme = "plotly_dark" if st.session_state["theme_mode"] == "Gelap" else "plotly_white"
 
 
-
 df = load_master()
 
 # Initialize theme mode in session state if not present

@@ -260,7 +260,7 @@ with col_right:
         
     st.markdown("<h5 style='font-size:0.92rem; font-weight:700;'>Identifikasi Daerah Coldspot (Low-Low)</h5>", unsafe_allow_html=True)
     ll_districts = df_yr[df_yr['lisa_cluster'] == 'Low-Low (Coldspot)']['nama_wilayah'].tolist()
-    if ll_districts:
+    if ll_districts:       
         ll_html = '<div style="display:flex; flex-wrap:wrap; gap:6px;">'
         for d in ll_districts[:8]:
             ll_html += f'<span class="priority-badge priority-low">{d}</span>'
