@@ -6,14 +6,8 @@ import plotly.graph_objects as go
 import urllib.request
 import json
 from utils.load_data import load_master
-from utils.styling import inject_custom_css, render_custom_sidebar
+from utils.styling import inject_custom_css
 
-# Page Configuration
-st.set_page_config(
-    page_title="Analisis Spasial - Jawa Timur",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 # Initialize theme mode in session state if not present
 if "theme_mode" not in st.session_state:
@@ -24,8 +18,6 @@ inject_custom_css(st.session_state["theme_mode"])
 chart_theme = "plotly_dark" if st.session_state["theme_mode"] == "Gelap" else "plotly_white"
 mapbox_style = "carto-darkmatter" if st.session_state["theme_mode"] == "Gelap" else "carto-positron"
 
-# Render custom sidebar
-render_custom_sidebar("Spasial")
 
 # Load master data
 df = load_master()
@@ -157,6 +149,8 @@ with col_left:
             fig = px.choropleth_mapbox(
                 df_yr, geojson=geojson_jt, locations='kode_wilayah_str',
                 featureidkey='properties.CC_2', color=selected_ind,
+                hover_name='nama_wilayah',
+                hover_data={selected_ind: True, 'kode_wilayah_str': False},
                 color_continuous_scale='Blues' if selected_ind in ['ipm', 'kepadatan_sipil_tahunan'] else 'Reds',
                 mapbox_style=mapbox_style,
                 center={"lat": -7.7, "lon": 112.5},
@@ -181,11 +175,13 @@ with col_left:
             fig = px.choropleth_mapbox(
                 df_yr, geojson=geojson_jt, locations='kode_wilayah_str',
                 featureidkey='properties.CC_2', color='lisa_cluster',
+                hover_name='nama_wilayah',
+                hover_data={selected_ind: True, 'kode_wilayah_str': False, 'lisa_cluster': True},
                 color_discrete_map={
                     'High-High (Hotspot)': '#ef4444',
                     'Low-Low (Coldspot)': '#0d9488',
                     'High-Low (Outlier)': '#d97706',
-                    'Low-High (Outlier)': '#3b82f6'
+                    'Low-High (Outlier)': '#4069AF'
                 },
                 mapbox_style=mapbox_style,
                 center={"lat": -7.7, "lon": 112.5},
@@ -202,7 +198,7 @@ with col_left:
                     'High-High (Hotspot)': '#ef4444',
                     'Low-Low (Coldspot)': '#0d9488',
                     'High-Low (Outlier)': '#d97706',
-                    'Low-High (Outlier)': '#3b82f6'
+                    'Low-High (Outlier)': '#4069AF'
                 },
                 hover_name='nama_wilayah', size_max=25, zoom=7,
                 title=f"Klaster LISA {indicators[selected_ind]} ({selected_year})"
@@ -223,7 +219,7 @@ with col_right:
         domain={'x': [0, 1], 'y': [0, 1]},
         gauge={
             'axis': {'range': [-1, 1], 'tickwidth': 1, 'tickcolor': gauge_axis_color, 'tickfont': {'color': gauge_axis_color}},
-            'bar': {'color': '#3b82f6'},
+            'bar': {'color': '#4069AF'},
             'bgcolor': gauge_bg,
             'borderwidth': 1,
             'bordercolor': '#cbd5e1' if st.session_state["theme_mode"] != "Gelap" else '#475569',

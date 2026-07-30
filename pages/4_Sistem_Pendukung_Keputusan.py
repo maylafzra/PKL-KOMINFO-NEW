@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from utils.load_data import load_master
-from utils.styling import inject_custom_css, render_custom_sidebar
+from utils.styling import inject_custom_css
 
 # Check if xgboost is available
 try:
@@ -13,12 +13,6 @@ try:
 except ImportError:
     use_xgb = False
 
-# Page Config
-st.set_page_config(
-    page_title="Sistem Pendukung Keputusan - Jawa Timur",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
 
 # Initialize theme mode in session state if not present
 if "theme_mode" not in st.session_state:
@@ -27,8 +21,6 @@ if "theme_mode" not in st.session_state:
 # Inject dynamic theme CSS
 inject_custom_css(st.session_state["theme_mode"])
 
-# Render custom sidebar
-render_custom_sidebar("SPK")
 
 # Load master data
 df = load_master()

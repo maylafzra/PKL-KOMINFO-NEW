@@ -1,14 +1,10 @@
 import base64
 from pathlib import Path
 import streamlit as st
-from utils.styling import inject_custom_css, render_custom_sidebar
+from utils.styling import inject_custom_css
 
-# Page Configuration
-st.set_page_config(
-    page_title="Dashboard Pembangunan Jawa Timur",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# Catatan: st.set_page_config() TIDAK dipanggil di sini lagi.
+# Itu sudah dipanggil sekali saja di app.py (file entry point utama).
 
 # Initialize global theme mode in session state
 if "theme_mode" not in st.session_state:
@@ -16,9 +12,6 @@ if "theme_mode" not in st.session_state:
 
 # Inject dynamic theme CSS
 inject_custom_css(st.session_state["theme_mode"])
-
-# Render custom sidebar with icons (theme selector moves to the bottom automatically)
-render_custom_sidebar("Home")
 
 BASE_DIR = Path(__file__).resolve().parent
 ASSETS_DIR = BASE_DIR / "assets"
@@ -70,7 +63,7 @@ else:
 st.markdown(
     f"""
     <div style="{hero_style} border-radius: 12px; padding: 50px 40px; border: 1px solid rgba(128,128,128,0.2); margin-bottom: 35px;">
-        <h1 style="color: #1e3a8a; font-size: 2.2rem; font-weight: 800; margin-bottom: 8px;">
+        <h1 style="color: #354599; font-size: 2.2rem; font-weight: 800; margin-bottom: 8px;">
             Sistem Informasi Monitoring Pembangunan Daerah
         </h1>
         <h2 style="color: var(--text-color); font-size: 1.25rem; font-weight: 600; margin-bottom: 20px; opacity: 0.85;">
@@ -95,7 +88,7 @@ with col_stat1:
     st.markdown("""
         <div class="landing-stat-card">
             <div style="color: #64748b; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Cakupan Wilayah</div>
-            <div style="color: #1e3a8a; font-size: 2rem; font-weight: 800; margin: 4px 0;">38</div>
+            <div style="color: #354599; font-size: 2rem; font-weight: 800; margin: 4px 0;">38</div>
             <div style="font-size: 0.82rem; opacity: 0.85;">Kabupaten dan Kota</div>
         </div>
     """, unsafe_allow_html=True)
@@ -137,7 +130,7 @@ col_f1, col_f2, col_f3 = st.columns(3)
 with col_f1:
     st.markdown("""
         <div class="landing-feature-card">
-            <h4 style="color: #1e3a8a; margin-top: 0; font-weight: 700; font-size: 1.1rem;">Monitoring Pembangunan</h4>
+            <h4 style="color: #354599; margin-top: 0; font-weight: 700; font-size: 1.1rem;">Monitoring Pembangunan</h4>
             <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 0; opacity: 0.9;">
                 Menyajikan visualisasi tren historis provinsi untuk Indeks Pembangunan Manusia (IPM), Tingkat Pengangguran Terbuka (TPT), 
                 Jumlah Penduduk Miskin, dan Kepadatan Penduduk Sipil, serta analisis profil rinci tingkat wilayah.
@@ -164,4 +157,4 @@ with col_f3:
             </p>
         </div>
     """, unsafe_allow_html=True)
-st.markdown("<p style='font-size:0.85rem;color:#64748b;margin-top:40px;'>Silakan gunakan menu navigasi di sebelah kiri untuk mengakses modul-modul analisis.</p>", unsafe_allow_html=True)
+st.markdown("<p style='font-size:0.85rem;color:#64748b;margin-top:40px;'>Silakan gunakan menu navigasi di bagian atas untuk mengakses modul-modul analisis.</p>", unsafe_allow_html=True)
