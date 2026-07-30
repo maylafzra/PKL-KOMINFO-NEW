@@ -6,12 +6,12 @@ def inject_custom_css(theme_mode="Sistem"):
     tiga tema: Sistem, Terang (Light Mode), dan Gelap (Dark Mode).
     Juga menyamakan tinggi seluruh kotak kecil metrik dan statistik secara presisi.
     Serta mendesain top navigation bar (Header) berwarna biru sesuai revisi mentor.
+    Menghilangkan sidebar secara total dari seluruh tampilan.
+    Juga menonaktifkan fitur mengetik (typing/search) di seluruh selectbox agar hanya bisa diklik.
     """
     if theme_mode == "Terang":
         bg_color = "#f8fafc"
         text_color = "#1e293b"
-        sidebar_bg = "#ffffff"
-        sidebar_text = "#1e293b"
         card_bg = "#ffffff"
         card_border = "#e2e8f0"
         card_hover_border = "#3b82f6"
@@ -25,8 +25,6 @@ def inject_custom_css(theme_mode="Sistem"):
     elif theme_mode == "Gelap":
         bg_color = "#0f172a"
         text_color = "#f8fafc"
-        sidebar_bg = "#1e293b"
-        sidebar_text = "#f8fafc"
         card_bg = "#1e293b"
         card_border = "#334155"
         card_hover_border = "#3b82f6"
@@ -40,8 +38,6 @@ def inject_custom_css(theme_mode="Sistem"):
     else:  # Sistem (Menggunakan variabel CSS bawaan Streamlit)
         bg_color = "var(--background-color)"
         text_color = "var(--text-color)"
-        sidebar_bg = "var(--secondary-background-color)"
-        sidebar_text = "var(--text-color)"
         card_bg = "var(--secondary-background-color)"
         card_border = "rgba(128, 128, 128, 0.2)"
         card_hover_border = "var(--primary-color)"
@@ -75,14 +71,13 @@ def inject_custom_css(theme_mode="Sistem"):
             color: {text_color} !important;
         }}
         
-        /* Tema Sidebar */
-        [data-testid="stSidebar"] {{
-            background-color: {sidebar_bg} !important;
-            border-right: 1px solid {card_border} !important;
+        /* HILANGKAN SIDEBAR SECARA TOTAL & HILANGKAN TOMBOL DI KIRI ATAS */
+        [data-testid="stSidebar"], section[data-testid="stSidebar"] {{
+            display: none !important;
+            width: 0px !important;
         }}
-        
-        [data-testid="stSidebar"] * {{
-            color: {sidebar_text} !important;
+        button[data-testid="collapsedSidebarIconButton"] {{
+            display: none !important;
         }}
         
         /* DESAIN TOP NAVIGATION BAR (Header Biru Instansi Pemerintah) */
@@ -330,6 +325,27 @@ def inject_custom_css(theme_mode="Sistem"):
         }}
         </style>
     """, unsafe_allow_html=True)
+    
+    # JS Hack untuk membuat seluruh selectbox bersifat readonly (hanya bisa diklik, tidak bisa diketik)
+    import streamlit.components.v1 as components
+    components.html("""
+        <script>
+            function makeSelectboxesReadOnly() {
+                try {
+                    const parentDoc = window.parent.document;
+                    const inputs = parentDoc.querySelectorAll('div[data-testid="stSelectbox"] input');
+                    inputs.forEach(input => {
+                        if (!input.hasAttribute('readonly')) {
+                            input.setAttribute('readonly', 'true');
+                            input.style.caretColor = 'transparent';
+                            input.style.cursor = 'pointer';
+                        }
+                    });
+                } catch (e) {}
+            }
+            setInterval(makeSelectboxesReadOnly, 250);
+        </script>
+    """, height=0, width=0)
 
 def render_metric_card(title, value, change_val=None, is_positive_good=True, border_color="#3b82f6"):
     """
@@ -358,26 +374,12 @@ def render_metric_card(title, value, change_val=None, is_positive_good=True, bor
 
 def render_theme_selector():
     """
-    Hanya merender pemilih tema di sidebar karena navigasi halaman
-    sekarang ditangani secara terpusat oleh top navigation bar Streamlit.
+    Dinonaktifkan secara total demi menyembunyikan sidebar dan pengaturan tema.
     """
-    theme_mode = st.session_state.get("theme_mode", "Sistem")
-    st.sidebar.markdown("<br><br><div style='font-size: 0.72rem; font-weight: 600; color: #64748b; margin-bottom: 6px;'>PENGATURAN TEMA</div>", unsafe_allow_html=True)
-    t_index = ["Sistem", "Terang", "Gelap"].index(theme_mode)
-    new_theme = st.sidebar.selectbox(
-        "Pilih Tema:",
-        ["Sistem", "Terang", "Gelap"],
-        index=t_index,
-        key="theme_mode_selector_sidebar",
-        label_visibility="collapsed"
-    )
-    if new_theme != theme_mode:
-        st.session_state["theme_mode"] = new_theme
-        st.rerun()
+    pass
 
 def render_custom_sidebar(active_page="Home"):
     """
-    Fallback untuk kompatibilitas ke belakang. Hanya memanggil render_theme_selector
-    karena menu navigasi utama sudah berpindah ke top navbar.
+    Dinonaktifkan secara total demi menyembunyikan sidebar dan pengaturan tema.
     """
-    render_theme_selector()
+    pass
