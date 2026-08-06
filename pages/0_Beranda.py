@@ -2,6 +2,7 @@ import base64
 from pathlib import Path
 import streamlit as st
 from utils.styling import inject_custom_css, render_theme_selector
+from utils.load_data import load_master
 
 # Page Configuration (Managed by Home.py)
 
@@ -12,6 +13,18 @@ if "theme_mode" not in st.session_state:
 
 # Inject dynamic theme CSS
 inject_custom_css(st.session_state["theme_mode"])
+
+# Load master data to dynamically highlight counts
+try:
+    df = load_master()
+    total_records = len(df)
+    total_regions = df['nama_wilayah'].nunique()
+    df_2025 = df[df['tahun'] == 2025]
+    total_population_2025 = df_2025['jumlah_penduduk'].sum() / 1e6 # Juta
+except Exception:
+    total_records = 304
+    total_regions = 38
+    total_population_2025 = 42.09
 
 # Render only theme selector in sidebar (nav is at the top)
 render_theme_selector()
@@ -40,14 +53,28 @@ logo_unair_b64   = find_and_encode(ASSETS_DIR, "logo_unair")
 logo_ftmm_b64    = find_and_encode(ASSETS_DIR, "logo_ftmm")
 hero_bg_b64      = find_and_encode(ASSETS_DIR, "hero_bromo")
 
-# Header Logos Strip (Kominfo Jatim: bulat, Unair: bulat, FTMM: persegi panjang)
-logo_html = '<div style="display: flex; align-items: center; gap: 20px; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid rgba(128,128,128,0.15);">'
+# Header Logos Strip with Rentang Periode & Integrasi on the top-right
+logo_html = '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid rgba(128,128,128,0.15);">'
+logo_html += '<div style="display: flex; align-items: center; gap: 20px;">'
 if logo_kominfo_b64:
     logo_html += f'<img src="{logo_kominfo_b64}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background: white; padding: 2px; border: 1px solid #e2e8f0;" alt="Logo Kominfo">'
 if logo_unair_b64:
     logo_html += f'<img src="{logo_unair_b64}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background: white; padding: 2px; border: 1px solid #e2e8f0;" alt="Logo Unair">'
 if logo_ftmm_b64:
     logo_html += f'<img src="{logo_ftmm_b64}" style="height: 50px; width: auto; object-fit: contain; background: white; border-radius: 6px; padding: 4px; border: 1px solid #e2e8f0;" alt="Logo FTMM">'
+logo_html += '</div>'
+logo_html += """
+<div style="display: flex; gap: 12px; font-size: 0.82rem; align-items: center;">
+    <div style="background: rgba(217, 119, 6, 0.08); color: #d97706; padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(217, 119, 6, 0.2); font-weight: 600; display: flex; align-items: center; gap: 6px;">
+        <span>📅</span>
+        <span>Periode: 2018-2025</span>
+    </div>
+    <div style="background: rgba(124, 58, 237, 0.08); color: #7c3aed; padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(124, 58, 237, 0.2); font-weight: 600; display: flex; align-items: center; gap: 6px;">
+        <span>🔗</span>
+        <span>Integrasi: BPS & Capil</span>
+    </div>
+</div>
+"""
 logo_html += "</div>"
 
 st.markdown(logo_html, unsafe_allow_html=True)
@@ -88,10 +115,10 @@ st.subheader("Cakupan Parameter Utama")
 col_stat1, col_stat2, col_stat3, col_stat4 = st.columns(4)
 
 with col_stat1:
-    st.markdown("""
+    st.markdown(f"""
         <div class="landing-stat-card">
             <div style="color: #64748b; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Cakupan Wilayah</div>
-            <div style="color: #1e3a8a; font-size: 2rem; font-weight: 800; margin: 4px 0;">38</div>
+            <div style="color: #1e3a8a; font-size: 2rem; font-weight: 800; margin: 4px 0;">{total_regions}</div>
             <div style="font-size: 0.82rem; opacity: 0.85;">Kabupaten dan Kota</div>
         </div>
     """, unsafe_allow_html=True)
@@ -106,20 +133,20 @@ with col_stat2:
     """, unsafe_allow_html=True)
 
 with col_stat3:
-    st.markdown("""
+    st.markdown(f"""
         <div class="landing-stat-card">
-            <div style="color: #64748b; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Rentang Periode</div>
-            <div style="color: #d97706; font-size: 2rem; font-weight: 800; margin: 4px 0;">2018-2025</div>
-            <div style="font-size: 0.82rem; opacity: 0.85;">Deret Waktu Historis</div>
+            <div style="color: #64748b; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Total Rekam Data</div>
+            <div style="color: #d97706; font-size: 2rem; font-weight: 800; margin: 4px 0;">{total_records}</div>
+            <div style="font-size: 0.82rem; opacity: 0.85;">Baris Data Terintegrasi</div>
         </div>
     """, unsafe_allow_html=True)
 
 with col_stat4:
-    st.markdown("""
+    st.markdown(f"""
         <div class="landing-stat-card">
-            <div style="color: #64748b; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Integrasi Institusi</div>
-            <div style="color: #7c3aed; font-size: 2.2rem; font-weight: 800; margin: 4px 0;">BPS & Capil</div>
-            <div style="font-size: 0.82rem; opacity: 0.85;">Data Terpadu & Valid</div>
+            <div style="color: #64748b; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Jumlah Penduduk</div>
+            <div style="color: #7c3aed; font-size: 2rem; font-weight: 800; margin: 4px 0;">{total_population_2025:.2f} Jt</div>
+            <div style="font-size: 0.82rem; opacity: 0.85;">Jiwa Jawa Timur (2025)</div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -133,31 +160,79 @@ col_f1, col_f2, col_f3 = st.columns(3)
 with col_f1:
     st.markdown("""
         <div class="landing-feature-card">
-            <h4 style="color: #1e3a8a; margin-top: 0; font-weight: 700; font-size: 1.1rem;">Monitoring Pembangunan</h4>
-            <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 0; opacity: 0.9;">
-                Menyajikan visualisasi tren historis provinsi untuk Indeks Pembangunan Manusia (IPM), Tingkat Pengangguran Terbuka (TPT), 
-                Jumlah Penduduk Miskin, dan Kepadatan Penduduk Sipil, serta analisis profil rinci tingkat wilayah.
-            </p>
+            <div>
+                <h4 style="color: #1e3a8a; margin-top: 0; font-weight: 700; font-size: 1.15rem;">Monitoring Pembangunan</h4>
+                <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 12px; opacity: 0.9; min-height: 60px;">
+                    Menyajikan visualisasi tren historis provinsi untuk Indeks Pembangunan Manusia (IPM), Tingkat Pengangguran Terbuka (TPT), 
+                    Jumlah Penduduk Miskin, dan Kepadatan Penduduk.
+                </p>
+            </div>
+            <div style="border-top: 1px solid rgba(128,128,128,0.15); padding-top: 10px; margin-top: 10px;">
+                <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em;">Review Data Makro (2025):</span>
+                <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                        <span>📈 Rata-rata IPM</span><b style="color: #0d9488;">76.01 (Tinggi)</b>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                        <span>💼 Rata-rata TPT</span><b style="color: #d97706;">3.78%</b>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                        <span>👥 Total Penduduk Miskin</span><b style="color: #be123c;">3.88 Juta Jiwa</b>
+                    </div>
+                </div>
+            </div>
         </div>
     """, unsafe_allow_html=True)
 
 with col_f2:
     st.markdown("""
         <div class="landing-feature-card">
-            <h4 style="color: #0d9488; margin-top: 0; font-weight: 700; font-size: 1.1rem;">Analisis Geospasial</h4>
-            <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 0; opacity: 0.9;">
-                Melakukan pemetaan tematik interaktif choropleth untuk melihat persebaran geografis indikator pembangunan, kalkulasi Moran's I, serta pendeteksian klaster spasial LISA.
-            </p>
+            <div>
+                <h4 style="color: #0d9488; margin-top: 0; font-weight: 700; font-size: 1.15rem;">Analisis Geospasial</h4>
+                <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 12px; opacity: 0.9; min-height: 60px;">
+                    Melakukan pemetaan temaktif interaktif choropleth untuk melihat persebaran geografis indikator pembangunan serta analisis LISA.
+                </p>
+            </div>
+            <div style="border-top: 1px solid rgba(128,128,128,0.15); padding-top: 10px; margin-top: 10px;">
+                <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em;">Review Metode & Peta:</span>
+                <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                        <span>🗺️ Model Spasial</span><b style="color: #0d9488;">Moran's I & LISA</b>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                        <span>🔴 Deteksi Klaster</span><b style="color: #be123c;">Hotspot (High-High)</b>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                        <span>📍 Sumber Peta</span><b style="color: #7c3aed;">BPS Jawa Timur</b>
+                    </div>
+                </div>
+            </div>
         </div>
     """, unsafe_allow_html=True)
 
 with col_f3:
     st.markdown("""
         <div class="landing-feature-card">
-            <h4 style="color: #d97706; margin-top: 0; font-weight: 700; font-size: 1.1rem;">Proyeksi & Keputusan</h4>
-            <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 0; opacity: 0.9;">
-                Memproyeksikan data kemiskinan tahun 2026 menggunakan model Machine Learning (XGBoost/Random Forest), serta mengelompokkan urgensi wilayah guna mendukung rekomendasi Bappeda.
-            </p>
+            <div>
+                <h4 style="color: #d97706; margin-top: 0; font-weight: 700; font-size: 1.15rem;">Proyeksi & Keputusan</h4>
+                <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 12px; opacity: 0.9; min-height: 60px;">
+                    Memproyeksikan data kemiskinan tahun 2026-2028 menggunakan Machine Learning serta mengelompokkan urgensi wilayah.
+                </p>
+            </div>
+            <div style="border-top: 1px solid rgba(128,128,128,0.15); padding-top: 10px; margin-top: 10px;">
+                <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em;">Review Model & Prioritas:</span>
+                <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                        <span>🤖 Algoritma Utama</span><b style="color: #d97706;">XGBoost / RF</b>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                        <span>🎯 Target Proyeksi</span><b style="color: #0d9488;">Tahun 2026 - 2028</b>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                        <span>⚖️ Output Rekomendasi</span><b style="color: #7c3aed;">Prioritas Bappeda</b>
+                    </div>
+                </div>
+            </div>
         </div>
     """, unsafe_allow_html=True)
 st.markdown("<p style='font-size:0.85rem;color:#64748b;margin-top:40px;'>Silakan gunakan menu navigasi di atas untuk mengakses modul-modul analisis.</p>", unsafe_allow_html=True)

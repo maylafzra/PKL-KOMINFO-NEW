@@ -244,7 +244,7 @@ def inject_custom_css(theme_mode="Sistem"):
             border-radius: 12px;
             padding: 24px;
             box-shadow: {card_shadow};
-            height: 280px;
+            min-height: 280px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;

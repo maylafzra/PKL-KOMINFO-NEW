@@ -305,3 +305,12 @@ with col_m4:
         is_positive_good=False,
         border_color="#8b5cf6"
     )
+
+st.write("")
+st.markdown("""
+    <div style="background-color:rgba(128,128,128,0.05); border-radius:8px; padding:12px 15px; border:1px solid rgba(128,128,128,0.15); font-size:0.8rem; color:#64748b; line-height:1.5; margin-top:20px;">
+        <b>ℹ️ Sumber Data Indikator Pembangunan:</b><br>
+        1. <b>Indeks Pembangunan Manusia (IPM)</b>, <b>Tingkat Pengangguran Terbuka (TPT)</b>, dan <b>Jumlah Penduduk Miskin</b> bersumber dari <b>Badan Pusat Statistik (BPS) Provinsi Jawa Timur</b> (Periode 2018–2025).<br>
+        2. <b>Kepadatan Penduduk Sipil</b> bersumber dari data konsolidasi bersih <b>Dinas Kependudukan dan Pencatatan Sipil (Dispendukcapil) Provinsi Jawa Timur</b>.
+    </div>
+""", unsafe_allow_html=True)

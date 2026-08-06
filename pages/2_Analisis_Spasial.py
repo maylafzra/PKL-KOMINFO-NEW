@@ -88,6 +88,15 @@ with col_tf2:
     }
     selected_ind = st.selectbox("Pilih Indikator:", list(indicators.keys()), format_func=lambda x: indicators[x])
 
+labels_dict = {
+    "jumlah_penduduk_miskin": "Jumlah Penduduk Miskin (Ribu Jiwa)",
+    "ipm": "Indeks Pembangunan Manusia (IPM)",
+    "tpt": "Tingkat Pengangguran Terbuka (%)",
+    "kepadatan_sipil_tahunan": "Kepadatan Penduduk (Jiwa/KM²)",
+    "lisa_cluster": "Klaster Spasial (LISA)",
+    "jumlah_penduduk": "Jumlah Penduduk (Jiwa)"
+}
+
 # Calculate Moran's I & LISA Clusters
 df_yr = df[df['tahun'] == selected_year].copy().reset_index(drop=True)
 num_regions = len(df_yr)
@@ -166,12 +175,17 @@ with col_left:
                 mapbox_style=mapbox_style,
                 center={"lat": -7.7, "lon": 112.5},
                 zoom=6.8,
+<<<<<<< HEAD
                 hover_name='nama_wilayah', # Menampilkan nama kabupaten/kota sebagai judul tooltip hover
                 hover_data={
                     'kode_wilayah_str': False, # Menyembunyikan kode wilayah agar lebih bersih
                     selected_ind: True
                 },
                 title=f"Peta Sebaran {indicators[selected_ind]} ({selected_year})"
+=======
+                title=f"Peta Sebaran {indicators[selected_ind]} ({selected_year})",
+                labels=labels_dict
+>>>>>>> 500ade6 (menambahkan fitur revisi dashboard)
             )
             # Add text labels on map centroids
             fig.add_trace(go.Scattermapbox(
@@ -197,7 +211,8 @@ with col_left:
                 df_yr, lat='lat', lon='lon', size='jumlah_penduduk', color=selected_ind,
                 color_continuous_scale='Blues' if selected_ind in ['ipm', 'kepadatan_sipil_tahunan'] else 'Reds',
                 hover_name='nama_wilayah', size_max=25, zoom=7,
-                title=f"Distribusi Spasial {indicators[selected_ind]} ({selected_year})"
+                title=f"Distribusi Spasial {indicators[selected_ind]} ({selected_year})",
+                labels=labels_dict
             )
             # Add text labels
             fig.add_trace(go.Scattermapbox(
@@ -227,6 +242,7 @@ with col_left:
                 mapbox_style=mapbox_style,
                 center={"lat": -7.7, "lon": 112.5},
                 zoom=6.8,
+<<<<<<< HEAD
                 hover_name='nama_wilayah', # Menampilkan nama kabupaten/kota sebagai judul tooltip hover
                 hover_data={
                     'kode_wilayah_str': False, # Menyembunyikan kode wilayah agar lebih bersih
@@ -234,6 +250,10 @@ with col_left:
                     selected_ind: True
                 },
                 title=f"Peta Klaster LISA {indicators[selected_ind]} ({selected_year})"
+=======
+                title=f"Peta Klaster LISA {indicators[selected_ind]} ({selected_year})",
+                labels=labels_dict
+>>>>>>> 500ade6 (menambahkan fitur revisi dashboard)
             )
             # Add text labels on map centroids
             fig.add_trace(go.Scattermapbox(
@@ -264,7 +284,8 @@ with col_left:
                     'Low-High (Outlier)': '#3b82f6'
                 },
                 hover_name='nama_wilayah', size_max=25, zoom=7,
-                title=f"Klaster LISA {indicators[selected_ind]} ({selected_year})"
+                title=f"Klaster LISA {indicators[selected_ind]} ({selected_year})",
+                labels=labels_dict
             )
             # Add text labels
             fig.add_trace(go.Scattermapbox(
@@ -279,6 +300,15 @@ with col_left:
             ))
             fig.update_layout(mapbox_style=mapbox_style, template=chart_theme, margin=dict(l=0, r=0, t=40, b=0))
             st.plotly_chart(fig, use_container_width=True)
+
+    st.write("")
+    st.markdown("""
+        <div style="background-color:rgba(128,128,128,0.05); border-radius:8px; padding:12px 15px; border:1px solid rgba(128,128,128,0.15); font-size:0.8rem; color:#64748b; line-height:1.5;">
+            <b>ℹ️ Sumber Pemetaan & Analisis Spasial:</b><br>
+            - <b>Batas Administratif Wilayah:</b> Peta administrasi (GeoJSON) diperoleh dari repositori publik <i>IndonesiaGeoJSON / GADM</i>.<br>
+            - <b>Perhitungan Autokorelasi & LISA:</b> Pendeteksian klaster hotspot (High-High) dan coldspot (Low-Low) dihitung secara komputasional menggunakan matriks bobot spasial <i>k-nearest neighbors (k=4)</i> terhadap data indikator makro yang terintegrasi dari <b>Badan Pusat Statistik (BPS) Jawa Timur</b> dan <b>Dinas Kependudukan dan Pencatatan Sipil (Dispendukcapil) Provinsi Jawa Timur</b>.
+        </div>
+    """, unsafe_allow_html=True)
 
 with col_right:
     st.markdown("<h4 style='font-size:1.1rem; font-weight:700; margin-bottom:15px;'>Spatial Insights</h4>", unsafe_allow_html=True)

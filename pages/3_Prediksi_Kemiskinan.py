@@ -100,6 +100,18 @@ with col_left:
     render_metric_card("R-Squared Score (R²)", f"{r2:.4f}", border_color="#2563eb")
     render_metric_card("Mean Absolute Pct Error", f"{mape:.2f} %", border_color="#0d9488")
     render_metric_card("Root Mean Squared Error", f"{rmse:.3f} Ribu", border_color="#d97706")
+    
+    # Narasi penjelasan cara mendapatkan proyeksi (Metodologi)
+    st.markdown("""
+        <div style="background-color: rgba(37, 99, 235, 0.05); border-radius: 8px; padding: 12px 15px; border: 1px dashed rgba(37, 99, 235, 0.25); font-size: 0.8rem; line-height: 1.5; margin-top: 15px;">
+            <b>ℹ️ Metodologi Proyeksi Kemiskinan:</b><br>
+            Angka proyeksi kemiskinan Jawa Timur tahun 2026–2028 diperoleh melalui dua tahap pemodelan terintegrasi:
+            <ol style="margin-top: 5px; margin-bottom: 5px; padding-left: 20px;">
+                <li><b>Ekstrapolasi Fitur Historis:</b> Masing-masing indikator penjelas (Penduduk, IPM, TPT, Kepadatan, dsb.) diproyeksikan tren masa depannya menggunakan model <i>Linear Regression</i> pada tingkat kabupaten/kota masing-masing.</li>
+                <li><b>Estimasi Target Model ML:</b> Nilai indikator hasil proyeksi tersebut kemudian dimasukkan ke dalam model Machine Learning (<i>XGBoost</i> atau <i>Random Forest</i>) yang telah dilatih pada data historis tahun 2018–2024 untuk memprediksi secara akurat proyeksi jumlah penduduk miskin.</li>
+            </ol>
+        </div>
+    """, unsafe_allow_html=True)
 
 with col_right:
     st.markdown("<h4 style='font-size:1.1rem; font-weight:700; margin-bottom:15px;'>Hasil Simulasi & Analisis Pentingnya Fitur</h4>", unsafe_allow_html=True)
