@@ -175,17 +175,13 @@ with col_left:
                 mapbox_style=mapbox_style,
                 center={"lat": -7.7, "lon": 112.5},
                 zoom=6.8,
-<<<<<<< HEAD
                 hover_name='nama_wilayah', # Menampilkan nama kabupaten/kota sebagai judul tooltip hover
                 hover_data={
                     'kode_wilayah_str': False, # Menyembunyikan kode wilayah agar lebih bersih
                     selected_ind: True
                 },
-                title=f"Peta Sebaran {indicators[selected_ind]} ({selected_year})"
-=======
                 title=f"Peta Sebaran {indicators[selected_ind]} ({selected_year})",
                 labels=labels_dict
->>>>>>> 500ade6 (menambahkan fitur revisi dashboard)
             )
             # Add text labels on map centroids
             fig.add_trace(go.Scattermapbox(
@@ -242,18 +238,15 @@ with col_left:
                 mapbox_style=mapbox_style,
                 center={"lat": -7.7, "lon": 112.5},
                 zoom=6.8,
-<<<<<<< HEAD
+
                 hover_name='nama_wilayah', # Menampilkan nama kabupaten/kota sebagai judul tooltip hover
                 hover_data={
                     'kode_wilayah_str': False, # Menyembunyikan kode wilayah agar lebih bersih
                     'lisa_cluster': True,
                     selected_ind: True
                 },
-                title=f"Peta Klaster LISA {indicators[selected_ind]} ({selected_year})"
-=======
                 title=f"Peta Klaster LISA {indicators[selected_ind]} ({selected_year})",
                 labels=labels_dict
->>>>>>> 500ade6 (menambahkan fitur revisi dashboard)
             )
             # Add text labels on map centroids
             fig.add_trace(go.Scattermapbox(

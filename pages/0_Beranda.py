@@ -1,18 +1,16 @@
 import base64
 from pathlib import Path
+
 import streamlit as st
-from utils.styling import inject_custom_css, render_theme_selector
+
+from utils.styling import inject_custom_css, render_custom_sidebar
 from utils.load_data import load_master
 
-# Page Configuration (Managed by Home.py)
-
-
-# Initialize global theme mode in session state
-if "theme_mode" not in st.session_state:
-    st.session_state["theme_mode"] = "Sistem"
-
-# Inject dynamic theme CSS
+# Inject dynamic theme CSS (theme_mode is already initialized in app.py)
 inject_custom_css(st.session_state["theme_mode"])
+
+# Render custom sidebar (if you're using the icon sidebar in addition to top nav)
+render_custom_sidebar("Home")
 
 # Load master data to dynamically highlight counts
 try:
@@ -20,17 +18,15 @@ try:
     total_records = len(df)
     total_regions = df['nama_wilayah'].nunique()
     df_2025 = df[df['tahun'] == 2025]
-    total_population_2025 = df_2025['jumlah_penduduk'].sum() / 1e6 # Juta
+    total_population_2025 = df_2025['jumlah_penduduk'].sum() / 1e6  # Juta
 except Exception:
     total_records = 304
     total_regions = 38
     total_population_2025 = 42.09
 
-# Render only theme selector in sidebar (nav is at the top)
-render_theme_selector()
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 ASSETS_DIR = BASE_DIR / "assets"
+
 
 def to_base64(path: Path):
     """Encode image to base64 data URI."""
@@ -40,6 +36,7 @@ def to_base64(path: Path):
         encoded = base64.b64encode(f.read()).decode()
     return f"data:image/{mime};base64,{encoded}"
 
+
 def find_and_encode(assets_dir: Path, base_name: str):
     """Search for base_name image across extensions and return base64 URI."""
     for ext in (".png", ".jpg", ".jpeg", ".webp", ".svg"):
@@ -48,10 +45,11 @@ def find_and_encode(assets_dir: Path, base_name: str):
             return to_base64(candidate)
     return None
 
+
 logo_kominfo_b64 = find_and_encode(ASSETS_DIR, "logo_kominfo")
-logo_unair_b64   = find_and_encode(ASSETS_DIR, "logo_unair")
-logo_ftmm_b64    = find_and_encode(ASSETS_DIR, "logo_ftmm")
-hero_bg_b64      = find_and_encode(ASSETS_DIR, "hero_bromo")
+logo_unair_b64 = find_and_encode(ASSETS_DIR, "logo_unair")
+logo_ftmm_b64 = find_and_encode(ASSETS_DIR, "logo_ftmm")
+hero_bg_b64 = find_and_encode(ASSETS_DIR, "hero_bromo")
 
 # Header Logos Strip with Rentang Periode & Integrasi on the top-right
 logo_html = '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid rgba(128,128,128,0.15);">'
@@ -93,7 +91,7 @@ else:
 st.markdown(
     f"""
     <div style="{hero_style} border-radius: 12px; padding: 50px 40px; border: 1px solid rgba(128,128,128,0.2); margin-bottom: 35px;">
-        <h1 style="color: #1e3a8a; font-size: 2.2rem; font-weight: 800; margin-bottom: 8px;">
+        <h1 style="color: #354599; font-size: 2.2rem; font-weight: 800; margin-bottom: 8px;">
             Sistem Informasi Monitoring Pembangunan Daerah
         </h1>
         <h2 style="color: var(--text-color); font-size: 1.25rem; font-weight: 600; margin-bottom: 20px; opacity: 0.85;">
@@ -111,14 +109,14 @@ st.markdown(
 
 st.subheader("Cakupan Parameter Utama")
 
-# Stat Grid
+# Stat Grid (landing-stat-card class for equal height)
 col_stat1, col_stat2, col_stat3, col_stat4 = st.columns(4)
 
 with col_stat1:
     st.markdown(f"""
         <div class="landing-stat-card">
             <div style="color: #64748b; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Cakupan Wilayah</div>
-            <div style="color: #1e3a8a; font-size: 2rem; font-weight: 800; margin: 4px 0;">{total_regions}</div>
+            <div style="color: #354599; font-size: 2rem; font-weight: 800; margin: 4px 0;">{total_regions}</div>
             <div style="font-size: 0.82rem; opacity: 0.85;">Kabupaten dan Kota</div>
         </div>
     """, unsafe_allow_html=True)
@@ -153,7 +151,7 @@ with col_stat4:
 st.write("")
 st.write("")
 
-# Modul Analitik
+# Modul Analitik (landing-feature-card class for equal height)
 st.subheader("Modul Analitik Sistem")
 col_f1, col_f2, col_f3 = st.columns(3)
 
@@ -161,7 +159,7 @@ with col_f1:
     st.markdown("""
         <div class="landing-feature-card">
             <div>
-                <h4 style="color: #1e3a8a; margin-top: 0; font-weight: 700; font-size: 1.15rem;">Monitoring Pembangunan</h4>
+                <h4 style="color: #354599; margin-top: 0; font-weight: 700; font-size: 1.15rem;">Monitoring Pembangunan</h4>
                 <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 12px; opacity: 0.9; min-height: 60px;">
                     Menyajikan visualisasi tren historis provinsi untuk Indeks Pembangunan Manusia (IPM), Tingkat Pengangguran Terbuka (TPT), 
                     Jumlah Penduduk Miskin, dan Kepadatan Penduduk.
@@ -190,7 +188,7 @@ with col_f2:
             <div>
                 <h4 style="color: #0d9488; margin-top: 0; font-weight: 700; font-size: 1.15rem;">Analisis Geospasial</h4>
                 <p style="font-size: 0.85rem; line-height: 1.5; margin-bottom: 12px; opacity: 0.9; min-height: 60px;">
-                    Melakukan pemetaan temaktif interaktif choropleth untuk melihat persebaran geografis indikator pembangunan serta analisis LISA.
+                    Melakukan pemetaan tematik interaktif choropleth untuk melihat persebaran geografis indikator pembangunan serta analisis LISA.
                 </p>
             </div>
             <div style="border-top: 1px solid rgba(128,128,128,0.15); padding-top: 10px; margin-top: 10px;">
@@ -235,4 +233,5 @@ with col_f3:
             </div>
         </div>
     """, unsafe_allow_html=True)
-st.markdown("<p style='font-size:0.85rem;color:#64748b;margin-top:40px;'>Silakan gunakan menu navigasi di atas untuk mengakses modul-modul analisis.</p>", unsafe_allow_html=True)
+
+st.markdown("<p style='font-size:0.85rem;color:#64748b;margin-top:40px;'>Silakan gunakan menu navigasi di bagian atas untuk mengakses modul-modul analisis.</p>", unsafe_allow_html=True)
