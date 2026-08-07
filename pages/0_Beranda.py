@@ -49,17 +49,21 @@ def find_and_encode(assets_dir: Path, base_name: str):
 logo_kominfo_b64 = find_and_encode(ASSETS_DIR, "logo_kominfo")
 logo_unair_b64 = find_and_encode(ASSETS_DIR, "logo_unair")
 logo_ftmm_b64 = find_and_encode(ASSETS_DIR, "logo_ftmm")
+logo_lengkap_b64 = find_and_encode(ASSETS_DIR, "logo_lengkap")
 hero_bg_b64 = find_and_encode(ASSETS_DIR, "hero_bromo")
 
 # Header Logos Strip with Rentang Periode & Integrasi on the top-right
 logo_html = '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid rgba(128,128,128,0.15);">'
 logo_html += '<div style="display: flex; align-items: center; gap: 20px;">'
-if logo_kominfo_b64:
-    logo_html += f'<img src="{logo_kominfo_b64}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background: white; padding: 2px; border: 1px solid #e2e8f0;" alt="Logo Kominfo">'
-if logo_unair_b64:
-    logo_html += f'<img src="{logo_unair_b64}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; background: white; padding: 2px; border: 1px solid #e2e8f0;" alt="Logo Unair">'
-if logo_ftmm_b64:
-    logo_html += f'<img src="{logo_ftmm_b64}" style="height: 50px; width: auto; object-fit: contain; background: white; border-radius: 6px; padding: 4px; border: 1px solid #e2e8f0;" alt="Logo FTMM">'
+if logo_lengkap_b64:
+    logo_html += f'<img src="{logo_lengkap_b64}" style="height: 65px; width: auto; object-fit: contain;" alt="Logo Lengkap">'
+else:
+    if logo_kominfo_b64:
+        logo_html += f'<img src="{logo_kominfo_b64}" style="height: 65px; width: auto; object-fit: contain;" alt="Logo Kominfo">'
+    if logo_unair_b64:
+        logo_html += f'<img src="{logo_unair_b64}" style="height: 50px; width: auto; object-fit: contain;" alt="Logo Unair">'
+    if logo_ftmm_b64:
+        logo_html += f'<img src="{logo_ftmm_b64}" style="height: 65px; width: auto; object-fit: contain;" alt="Logo FTMM">'
 logo_html += '</div>'
 logo_html += """
 <div style="display: flex; gap: 12px; font-size: 0.82rem; align-items: center;">
