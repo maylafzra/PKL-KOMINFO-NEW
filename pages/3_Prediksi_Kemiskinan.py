@@ -202,6 +202,11 @@ with col_right:
             <div style='background-color:rgba(59,130,246,0.06); border-radius:8px; padding:15px; border:1px solid rgba(59,130,246,0.15); font-size:0.88rem; line-height:1.5;'>
                 Proyeksi tahun 2026 menunjukkan angka kemiskinan sebesar <b>{pred_2026_val:,.3f} ribu jiwa</b> (mengalami {direction} 
                 sebesar <b>{abs(chg_val):,.3f} ribu jiwa</b> dibandingkan data historis akhir 2025 sebesar <b>{act_2025_val:,.3f} ribu jiwa</b>).
+                <div style="margin-top:10px; padding-top:10px; border-top:1px dashed rgba(59,130,246,0.2); font-size:0.78rem; opacity:0.85;">
+                    📊 Proyeksi ini dihitung berdasarkan model <b>{selected_model_name}</b> yang dilatih pada data historis 2018–2024, 
+                    dengan variabel penjelas (IPM, TPT, kepadatan penduduk, dsb.) untuk {selected_region} diproyeksikan terlebih dahulu 
+                    menggunakan tren regresi linear sebelum diestimasi menjadi angka proyeksi kemiskinan akhir.
+                </div>
             </div>
         """, unsafe_allow_html=True)
         

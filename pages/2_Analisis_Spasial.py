@@ -306,38 +306,71 @@ with col_left:
 with col_right:
     st.markdown("<h4 style='font-size:1.1rem; font-weight:700; margin-bottom:15px;'>Spatial Insights</h4>", unsafe_allow_html=True)
     
-    # 1. Moran's I Gauge Chart (Plotly go.Indicator)
-    gauge_bg = "#1e293b" if st.session_state["theme_mode"] == "Gelap" else "#ffffff"
-    gauge_axis_color = "#94a3b8" if st.session_state["theme_mode"] == "Gelap" else "#64748b"
-    
-    fig_gauge = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=morans_i,
-        domain={'x': [0, 1], 'y': [0, 1]},
-        gauge={
-            'axis': {'range': [-1, 1], 'tickwidth': 1, 'tickcolor': gauge_axis_color, 'tickfont': {'color': gauge_axis_color}},
-            'bar': {'color': '#3b82f6'},
-            'bgcolor': gauge_bg,
-            'borderwidth': 1,
-            'bordercolor': '#cbd5e1' if st.session_state["theme_mode"] != "Gelap" else '#475569',
-            'steps': [
-                {'range': [-1, 0], 'color': 'rgba(239, 68, 68, 0.08)'},
-                {'range': [0, 1], 'color': 'rgba(16, 185, 129, 0.08)'}
-            ]
-        }
-    ))
-    fig_gauge.update_layout(
-        height=180, margin=dict(l=15, r=15, t=10, b=10),
-        paper_bgcolor='rgba(0,0,0,0)',
-        title={'text': "Indeks Moran's I", 'font': {'size': 12, 'color': gauge_axis_color}, 'x': 0.5, 'y': 0.95}
-    )
-    st.plotly_chart(fig_gauge, use_container_width=True)
+    # 1. Moran's I — Donut Ring KPI (custom CSS, bukan gauge speedometer)
+    is_dark = st.session_state["theme_mode"] == "Gelap"
+    ring_track_color = "rgba(148,163,184,0.18)" if not is_dark else "rgba(148,163,184,0.15)"
+    ring_inner_bg = "#ffffff" if not is_dark else "#1e293b"
+    ring_label_color = "#94a3b8" if is_dark else "#64748b"
+    ring_border_color = "#e2e8f0" if not is_dark else "#334155"
+
+    # Magnitude 0-1 dipetakan ke 0-360 derajat; arah warna beda utk positif/negatif
+    magnitude_pct = min(abs(morans_i), 1.0) * 100
+    ring_angle = magnitude_pct * 3.6
+
+    if morans_i > 0.02:
+        ring_color_start, ring_color_end = "#3b82f6", "#0d9488"
+        moran_badge_bg, moran_badge_color = "rgba(13,148,136,0.1)", "#0d9488"
+        moran_badge_text = "Autokorelasi Positif"
+    elif morans_i < -0.02:
+        ring_color_start, ring_color_end = "#ef4444", "#d97706"
+        moran_badge_bg, moran_badge_color = "rgba(239,68,68,0.1)", "#ef4444"
+        moran_badge_text = "Autokorelasi Negatif"
+    else:
+        ring_color_start, ring_color_end = "#94a3b8", "#64748b"
+        moran_badge_bg, moran_badge_color = "rgba(100,116,139,0.1)", "#64748b"
+        moran_badge_text = "Pola Acak (Tidak Signifikan)"
+
+    st.markdown(f"""
+        <div style="display:flex; flex-direction:column; align-items:center; padding:6px 0 14px 0;">
+            <div style="font-size:0.72rem; font-weight:700; color:{ring_label_color}; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px;">
+                Indeks Moran's I
+            </div>
+            <div style="position:relative; width:168px; height:168px;">
+                <div style="width:168px; height:168px; border-radius:50%;
+                            background: conic-gradient(from 0deg,
+                                {ring_color_start} 0deg,
+                                {ring_color_end} {ring_angle}deg,
+                                {ring_track_color} {ring_angle}deg 360deg);
+                            display:flex; align-items:center; justify-content:center;
+                            box-shadow: 0 2px 10px rgba(0,0,0,0.06);">
+                    <div style="width:124px; height:124px; border-radius:50%; background:{ring_inner_bg};
+                                border:1px solid {ring_border_color};
+                                display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                        <div style="font-size:1.9rem; font-weight:800; color:{ring_color_start}; line-height:1;">
+                            {morans_i:.3f}
+                        </div>
+                        <div style="font-size:0.62rem; color:{ring_label_color}; margin-top:4px;">rentang -1 s/d 1</div>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:14px; background:{moran_badge_bg}; color:{moran_badge_color}; font-size:0.78rem; font-weight:700; padding:5px 14px; border-radius:20px;">
+                {moran_badge_text}
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
     
     # Interpretation text
     moran_text = "Autokorelasi Spasial Positif" if morans_i > 0 else "Autokorelasi Spasial Negatif"
     st.markdown(f"""
-        <div style='font-size:0.82rem; line-height:1.4; opacity:0.85; margin-bottom:15px;'>
-            Nilai Moran's I sebesar <b>{morans_i:.4f}</b> menunjukkan pola <b>{moran_text}</b>. Wilayah dengan karakteristik serupa cenderung berkelompok secara geografis.
+        <div style='font-size:0.82rem; line-height:1.4; opacity:0.85; margin-bottom:10px;'>
+            Nilai Moran's I sebesar <b>{morans_i:.4f}</b> menunjukkan pola <b>{moran_text}</b> untuk indikator <b>{indicators[selected_ind]}</b> tahun <b>{selected_year}</b>. Wilayah dengan karakteristik serupa cenderung berkelompok secara geografis.
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Source & methodology note for the Moran's I index
+    st.markdown("""
+        <div style="background-color:rgba(128,128,128,0.05); border-radius:8px; padding:10px 12px; border:1px solid rgba(128,128,128,0.15); font-size:0.75rem; color:#64748b; line-height:1.5; margin-bottom:15px;">
+            <b>ℹ️ Metode & Sumber Indeks:</b> Indeks Moran's I dihitung dari data indikator makro <b>BPS Jawa Timur</b> dan <b>Dispendukcapil Provinsi Jawa Timur</b>, menggunakan matriks bobot spasial <i>k-nearest neighbors (k=4)</i> berbasis titik pusat (centroid) tiap kabupaten/kota. Nilai berkisar dari -1 (autokorelasi negatif sempurna) hingga +1 (autokorelasi positif sempurna); nilai mendekati 0 menandakan pola acak (tidak ada autokorelasi spasial).
         </div>
     """, unsafe_allow_html=True)
     
