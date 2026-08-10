@@ -6,15 +6,7 @@ from sklearn.ensemble import RandomForestRegressor
 from utils.load_data import load_master
 from utils.styling import inject_custom_css
 
-# Check if xgboost is available
-try:
-    import xgboost as xgb
-    use_xgb = True
-except ImportError:
-    use_xgb = False
-
 # Page Config (Managed by Home.py)
-
 
 # Initialize theme mode in session state if not present
 if "theme_mode" not in st.session_state:
@@ -22,7 +14,6 @@ if "theme_mode" not in st.session_state:
 
 # Inject dynamic theme CSS
 inject_custom_css(st.session_state["theme_mode"])
-
 
 # Load master data
 df = load_master()
@@ -47,15 +38,12 @@ df_train_clean = df_train.dropna(subset=features + [target])
 X_train, y_train = df_train_clean[features], df_train_clean[target]
 
 @st.cache_resource
-def train_model(use_xgb_flag):
-    if use_xgb_flag:
-        model_obj = xgb.XGBRegressor(n_estimators=100, max_depth=4, learning_rate=0.08, random_state=42)
-    else:
-        model_obj = RandomForestRegressor(n_estimators=100, random_state=42)
+def train_model():
+    model_obj = RandomForestRegressor(n_estimators=100, random_state=42)
     model_obj.fit(X_train, y_train)
     return model_obj
 
-model = train_model(use_xgb)
+model = train_model()
 
 @st.cache_data
 def get_projections():
@@ -143,6 +131,20 @@ with col_left:
         
     st.write("")
     
+    # Landasan Metodologi Pembagian Prioritas
+    st.markdown("""
+        <div style="background-color:rgba(128,128,128,0.05); border-radius:8px; padding:15px; border:1px solid rgba(128,128,128,0.15); font-size:0.8rem; line-height:1.5; margin-bottom:15px;">
+            <b>ℹ️ Landasan Statistik Klasifikasi Prioritas:</b><br>
+            Pengelompokkan prioritas wilayah (Tinggi, Sedang, Rendah) didasarkan secara objektif pada <b>Metode Kuantil Sepertiga (Tertiles)</b> terhadap sebaran proyeksi jumlah penduduk miskin tahun 2026:
+            <ul style="margin-top: 5px; margin-bottom: 5px; padding-left: 18px;">
+                <li><b>Prioritas Tinggi (Sangat Urgen)</b>: Wilayah sepertiga teratas (di atas persentil ke-66) dengan estimasi jumlah penduduk miskin tertinggi.</li>
+                <li><b>Prioritas Sedang (Pemantauan)</b>: Wilayah sepertiga tengah (di antara persentil ke-33 dan ke-66).</li>
+                <li><b>Prioritas Rendah (Relatif Stabil)</b>: Wilayah sepertiga terbawah (di bawah persentil ke-33).</li>
+            </ul>
+            Pembagian berbasis kuantil sepertiga ini merupakan metode standar dalam perencanaan pembangunan daerah (Bappeda) untuk membagi alokasi program secara adil, transparan, dan bebas dari bias asumsi subjektif.
+        </div>
+    """, unsafe_allow_html=True)
+    
     # Selection of District to show Dynamic Recommendation
     list_districts = sorted(df_2026['nama_wilayah'].unique().tolist())
     selected_district = st.selectbox("Pilih Kabupaten/Kota untuk Analisis Kebijakan:", list_districts, index=0)
@@ -201,3 +203,13 @@ with col_right:
             dan diprioritaskan alokasinya melalui skema Anggaran Pendapatan dan Belanja Daerah (APBD) Jawa Timur.
         </div>
     """, unsafe_allow_html=True)
+
+st.write("")
+st.markdown("""
+    <div style="background-color:rgba(128,128,128,0.05); border-radius:8px; padding:12px 15px; border:1px solid rgba(128,128,128,0.15); font-size:0.8rem; color:#64748b; line-height:1.5; margin-top:10px;">
+        <b>ℹ️ Sumber Data Klasifikasi & Kebijakan:</b><br>
+        1. <b>Metrik Indikator Penjelas (IPM, TPT, dan Jumlah Penduduk Miskin)</b> bersumber dari <b>Badan Pusat Statistik (BPS) Provinsi Jawa Timur</b> (Periode 2018–2025).<br>
+        2. <b>Estimasi Proyeksi & Model Machine Learning</b> dikalkulasi menggunakan algoritma <i>Random Forest Regressor</i> berdasarkan pemodelan data historis Jawa Timur.<br>
+        3. <b>Rekomendasi Kebijakan Dinamis</b> diselaraskan dengan prioritas Rencana Pembangunan Jangka Menengah Daerah (RPJMD) <b>Bappeda Provinsi Jawa Timur</b>.
+    </div>
+""", unsafe_allow_html=True)

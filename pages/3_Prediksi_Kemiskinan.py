@@ -8,15 +8,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from utils.load_data import load_master
 from utils.styling import inject_custom_css, render_metric_card
 
-# Check if xgboost is available
-try:
-    import xgboost as xgb
-    use_xgb = True
-except ImportError:
-    use_xgb = False
-
 # Page Configuration (Managed by Home.py)
-
 
 # Initialize theme mode in session state if not present
 if "theme_mode" not in st.session_state:
@@ -26,7 +18,6 @@ if "theme_mode" not in st.session_state:
 inject_custom_css(st.session_state["theme_mode"])
 chart_theme = "plotly_dark" if st.session_state["theme_mode"] == "Gelap" else "plotly_white"
 
-
 # Load master data
 df = load_master()
 
@@ -35,8 +26,8 @@ st.markdown("""
     <div class="dashboard-banner">
         <div class="banner-title">Machine Learning Simulator</div>
         <div class="banner-desc">
-            Pusat simulasi estimasi kemiskinan daerah. Latih ulang model secara real-time, 
-            analisis kontribusi faktor (Feature Importance), serta simulasikan proyeksi wilayah hingga 2028.
+            Pusat simulasi estimasi kemiskinan daerah menggunakan algoritma Random Forest Regressor. 
+            Simulasikan proyeksi wilayah Anda hingga tahun 2028 secara interaktif.
         </div>
     </div>
 """, unsafe_allow_html=True)
@@ -59,29 +50,16 @@ X_test, y_test = df_test_clean[features], df_test_clean[target]
 col_left, col_right = st.columns([1, 2])
 
 with col_left:
-    st.markdown("<h4 style='font-size:1.1rem; font-weight:700; margin-bottom:15px;'>Kontrol Simulator & Model</h4>", unsafe_allow_html=True)
+    st.markdown("<h4 style='font-size:1.1rem; font-weight:700; margin-bottom:15px;'>Konfigurasi & Penjelasan Model</h4>", unsafe_allow_html=True)
     
-    # 1. Model Configuration
-    model_choices = ["Random Forest Regressor"]
-    if use_xgb:
-        model_choices.insert(0, "XGBoost Regressor")
-    
-    selected_model_name = st.selectbox(
-        "Pilih Algoritma Model:",
-        model_choices
-    )
-    
-    # Train selected model dynamically
+    # Train Random Forest Regressor model
     @st.cache_resource
-    def train_dynamic_model(model_name):
-        if model_name == "XGBoost Regressor":
-            model_obj = xgb.XGBRegressor(n_estimators=100, max_depth=4, learning_rate=0.08, random_state=42)
-        else:
-            model_obj = RandomForestRegressor(n_estimators=100, random_state=42)
+    def train_rf_model():
+        model_obj = RandomForestRegressor(n_estimators=100, random_state=42)
         model_obj.fit(X_train, y_train)
         return model_obj
         
-    model = train_dynamic_model(selected_model_name)
+    model = train_rf_model()
     
     # Predict Test set for evaluation
     y_pred = model.predict(X_test)
@@ -92,14 +70,54 @@ with col_left:
     mape = np.mean(np.abs((y_test - y_pred) / y_test)) * 100
     r2 = r2_score(y_test, y_pred)
     
-    st.write("")
+    # Penjelasan Model Random Forest
+    st.markdown(f"""
+        <div style="background-color: rgba(13, 148, 136, 0.04); border-left: 4px solid #0d9488; border-radius: 6px; padding: 16px; margin-bottom: 24px;">
+            <h5 style="margin-top: 0; margin-bottom: 8px; color: #0d9488; font-weight: 700; font-size: 0.92rem; text-transform: uppercase; letter-spacing: 0.05em;">Model: Random Forest Regressor</h5>
+            <p style="margin: 0 0 10px 0; font-size: 0.8rem; line-height: 1.5;">
+                <b>Cara Kerja:</b> Membangun kumpulan 100 pohon keputusan secara independen. Setiap pohon mempelajari pola data historis secara acak, kemudian hasil prediksinya dirata-ratakan (agregasi) untuk menghasilkan estimasi akhir yang stabil dan minim varians.
+            </p>
+            <p style="margin: 0; font-size: 0.8rem; line-height: 1.5;">
+                <b>Hubungan Variabel:</b> Memetakan korelasi non-linear dari total penduduk, IPM, TPT, kepadatan sipil, sex ratio, dan laju pertumbuhan terhadap jumlah penduduk miskin.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
     
-    # 2. Display Model Performance (Vertical stack in 1/3 column)
-    st.markdown("<h5 style='font-size:0.92rem; font-weight:700; margin-bottom:10px;'>Akurasi Uji Validasi (Tahun 2025)</h5>", unsafe_allow_html=True)
+    # 2. Display Model Performance & Conceptual Explanation
+    st.markdown("<h5 style='font-size:0.92rem; font-weight:700; margin-bottom:12px;'>Akurasi Uji Validasi (Tahun 2025)</h5>", unsafe_allow_html=True)
     
-    render_metric_card("R-Squared Score (R²)", f"{r2:.4f}", border_color="#2563eb")
-    render_metric_card("Mean Absolute Pct Error", f"{mape:.2f} %", border_color="#0d9488")
-    render_metric_card("Root Mean Squared Error", f"{rmse:.3f} Ribu", border_color="#d97706")
+    # Metric Card 1 (R-Squared)
+    st.markdown(f"""
+        <div class="metric-card" style="border-left: 4px solid #2563eb; height: auto; min-height: 110px; padding: 15px; margin-bottom: 15px; display: block;">
+            <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">R-Squared Score (R²)</div>
+            <div style="font-size: 1.6rem; color: var(--text-color); font-weight: 700; margin-bottom: 4px; line-height: 1.1;">{r2:.4f}</div>
+            <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">
+                <b>Makna:</b> Model mampu menerangkan <b>{r2*100:.1f}%</b> variabilitas data kemiskinan Jawa Timur berdasarkan tren historis.
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Metric Card 2 (MAPE)
+    st.markdown(f"""
+        <div class="metric-card" style="border-left: 4px solid #0d9488; height: auto; min-height: 110px; padding: 15px; margin-bottom: 15px; display: block;">
+            <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Mean Absolute Pct Error (MAPE)</div>
+            <div style="font-size: 1.6rem; color: var(--text-color); font-weight: 700; margin-bottom: 4px; line-height: 1.1;">{mape:.2f} %</div>
+            <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">
+                <b>Makna:</b> Rata-rata persentase penyimpangan estimasi adalah <b>{mape:.2f}%</b> (tergolong akurasi sangat tinggi/di bawah 10%).
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Metric Card 3 (RMSE)
+    st.markdown(f"""
+        <div class="metric-card" style="border-left: 4px solid #d97706; height: auto; min-height: 110px; padding: 15px; margin-bottom: 15px; display: block;">
+            <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Root Mean Squared Error (RMSE)</div>
+            <div style="font-size: 1.6rem; color: var(--text-color); font-weight: 700; margin-bottom: 4px; line-height: 1.1;">{rmse:.3f} Ribu</div>
+            <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">
+                <b>Makna:</b> Standar deviasi kesalahan estimasi adalah sebesar <b>{rmse:.3f} ribu jiwa</b> dari nilai riil data historis.
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
     
     # Narasi penjelasan cara mendapatkan proyeksi (Metodologi)
     st.markdown("""
@@ -108,7 +126,7 @@ with col_left:
             Angka proyeksi kemiskinan Jawa Timur tahun 2026–2028 diperoleh melalui dua tahap pemodelan terintegrasi:
             <ol style="margin-top: 5px; margin-bottom: 5px; padding-left: 20px;">
                 <li><b>Ekstrapolasi Fitur Historis:</b> Masing-masing indikator penjelas (Penduduk, IPM, TPT, Kepadatan, dsb.) diproyeksikan tren masa depannya menggunakan model <i>Linear Regression</i> pada tingkat kabupaten/kota masing-masing.</li>
-                <li><b>Estimasi Target Model ML:</b> Nilai indikator hasil proyeksi tersebut kemudian dimasukkan ke dalam model Machine Learning (<i>XGBoost</i> atau <i>Random Forest</i>) yang telah dilatih pada data historis tahun 2018–2024 untuk memprediksi secara akurat proyeksi jumlah penduduk miskin.</li>
+                <li><b>Estimasi Target Model ML:</b> Nilai indikator hasil proyeksi tersebut kemudian dimasukkan ke dalam model Machine Learning <i>Random Forest</i> yang telah dilatih pada data historis tahun 2018–2024 untuk memprediksi secara akurat proyeksi jumlah penduduk miskin.</li>
             </ol>
         </div>
     """, unsafe_allow_html=True)
@@ -128,8 +146,7 @@ with col_right:
     
     # --- PROYEKSI FORECASTING 3 TAHUN (2026-2028) ---
     @st.cache_data
-    def get_projections(model_name):
-        # We pass model_name to invalidate cache when model is switched
+    def get_projections():
         forecast_results = []
         for code, group in df.groupby('kode_wilayah'):
             proj_features = {}
@@ -156,7 +173,7 @@ with col_right:
             
         return pd.concat(forecast_results).reset_index(drop=True)
 
-    df_forecast = get_projections(selected_model_name)
+    df_forecast = get_projections()
     
     if viz_choice == "Simulasi Proyeksi Wilayah":
         # Interactive Projections Line Chart
@@ -203,7 +220,7 @@ with col_right:
                 Proyeksi tahun 2026 menunjukkan angka kemiskinan sebesar <b>{pred_2026_val:,.3f} ribu jiwa</b> (mengalami {direction} 
                 sebesar <b>{abs(chg_val):,.3f} ribu jiwa</b> dibandingkan data historis akhir 2025 sebesar <b>{act_2025_val:,.3f} ribu jiwa</b>).
                 <div style="margin-top:10px; padding-top:10px; border-top:1px dashed rgba(59,130,246,0.2); font-size:0.78rem; opacity:0.85;">
-                    📊 Proyeksi ini dihitung berdasarkan model <b>{selected_model_name}</b> yang dilatih pada data historis 2018–2024, 
+                    📊 Proyeksi ini dihitung berdasarkan model <b>Random Forest Regressor</b> yang dilatih pada data historis 2018–2024, 
                     dengan variabel penjelas (IPM, TPT, kepadatan penduduk, dsb.) untuk {selected_region} diproyeksikan terlebih dahulu 
                     menggunakan tren regresi linear sebelum diestimasi menjadi angka proyeksi kemiskinan akhir.
                 </div>
@@ -229,22 +246,27 @@ with col_right:
 
 st.write("---")
 
-# Predictions table for 2026 (SaaS style Table)
-st.subheader("Hasil Estimasi Angka Kemiskinan Kabupaten/Kota (Tahun 2026)")
-df_2026 = df_forecast[df_forecast['tahun'] == 2026][['kode_wilayah', 'nama_wilayah', 'tipe_wilayah', 'jumlah_penduduk_miskin_pred']].copy()
-df_2026 = df_2026.rename(columns={
+# Predictions table for future years (2026-2028)
+st.subheader("Hasil Estimasi Angka Kemiskinan Kabupaten/Kota")
+
+col_tbl1, col_tbl2 = st.columns([1, 2])
+with col_tbl1:
+    selected_proj_year = st.selectbox("Pilih Tahun Estimasi Proyeksi:", [2026, 2027, 2028], index=0)
+with col_tbl2:
+    search_tbl = st.text_input("Saring Berdasarkan Nama Daerah:", "", key="tbl_search_q", placeholder="Cari kabupaten/kota...")
+
+df_table_year = df_forecast[df_forecast['tahun'] == selected_proj_year][['kode_wilayah', 'nama_wilayah', 'tipe_wilayah', 'jumlah_penduduk_miskin_pred']].copy()
+df_table_year = df_table_year.rename(columns={
     'kode_wilayah': 'Kode Wilayah',
     'nama_wilayah': 'Kabupaten/Kota',
     'tipe_wilayah': 'Tipe Wilayah',
-    'jumlah_penduduk_miskin_pred': 'Prediksi Kemiskinan 2026 (Ribu Jiwa)'
+    'jumlah_penduduk_miskin_pred': f'Prediksi Kemiskinan {selected_proj_year} (Ribu Jiwa)'
 }).reset_index(drop=True)
 
-df_2026['Prediksi Kemiskinan 2026 (Ribu Jiwa)'] = df_2026['Prediksi Kemiskinan 2026 (Ribu Jiwa)'].round(3)
-df_2026['Prediksi Jiwa Miskin (Jiwa)'] = (df_2026['Prediksi Kemiskinan 2026 (Ribu Jiwa)'] * 1000).round(0)
+df_table_year[f'Prediksi Kemiskinan {selected_proj_year} (Ribu Jiwa)'] = df_table_year[f'Prediksi Kemiskinan {selected_proj_year} (Ribu Jiwa)'].round(3)
+df_table_year['Estimasi Jumlah Penduduk Miskin (Jiwa)'] = (df_table_year[f'Prediksi Kemiskinan {selected_proj_year} (Ribu Jiwa)'] * 1000).round(0)
 
-# Search
-search_tbl = st.text_input("Saring Tabel Hasil Prediksi:", "", key="tbl_search_q", placeholder="Cari kabupaten/kota...")
 if search_tbl:
-    df_2026 = df_2026[df_2026['Kabupaten/Kota'].str.contains(search_tbl, case=False)]
+    df_table_year = df_table_year[df_table_year['Kabupaten/Kota'].str.contains(search_tbl, case=False)]
     
-st.dataframe(df_2026, use_container_width=True, hide_index=True)
+st.dataframe(df_table_year, use_container_width=True, hide_index=True)

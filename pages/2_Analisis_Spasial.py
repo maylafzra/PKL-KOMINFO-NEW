@@ -362,15 +362,25 @@ with col_right:
     # Interpretation text
     moran_text = "Autokorelasi Spasial Positif" if morans_i > 0 else "Autokorelasi Spasial Negatif"
     st.markdown(f"""
-        <div style='font-size:0.82rem; line-height:1.4; opacity:0.85; margin-bottom:10px;'>
-            Nilai Moran's I sebesar <b>{morans_i:.4f}</b> menunjukkan pola <b>{moran_text}</b> untuk indikator <b>{indicators[selected_ind]}</b> tahun <b>{selected_year}</b>. Wilayah dengan karakteristik serupa cenderung berkelompok secara geografis.
+        <div style='background-color: rgba(59,130,246,0.05); border-radius: 8px; padding: 15px; border: 1px solid rgba(59,130,246,0.15); font-size: 0.85rem; line-height: 1.6; margin-bottom: 15px;'>
+            <b>Analisis Indeks Moran's I:</b><br>
+            Indeks Moran's I mengukur tingkat keterikatan spasial (apakah suatu pola geografis menyebar, mengelompok, atau acak). Nilai indeks berkisar antara <b>-1</b> hingga <b>+1</b>.
+            <ul style="margin-top: 5px; margin-bottom: 5px; padding-left: 18px;">
+                <li><b>Nilai mendekati +1 (Autokorelasi Positif)</b>: Wilayah yang bertetangga memiliki nilai indikator yang serupa (tinggi dikelilingi tinggi, atau rendah dikelilingi rendah).</li>
+                <li><b>Nilai mendekati -1 (Autokorelasi Negatif)</b>: Wilayah yang bertetangga memiliki nilai indikator yang bertolak belakang (outlier).</li>
+                <li><b>Nilai mendekati 0</b>: Pola acak secara spasial (tidak ada hubungan geografis).</li>
+            </ul>
+            Nilai Moran's I sebesar <b>{morans_i:.4f}</b> menunjukkan adanya pola <b>{moran_text}</b> yang signifikan untuk indikator <b>{indicators[selected_ind]}</b> pada tahun <b>{selected_year}</b>. 
+            <br><br>
+            <b>Mengapa Autokorelasi Positif?</b><br>
+            Karena nilai indeks bernilai positif (di atas 0), dapat disimpulkan bahwa terjadi <b>dampak limpahan spasial (*spatial spillover effect*)</b>. Artinya, kondisi sosial ekonomi suatu kabupaten/kota tidak berdiri sendiri, melainkan dipengaruhi dan memengaruhi wilayah tetangga terdekatnya secara geografis. Daerah dengan angka indikator tinggi cenderung berdampingan dengan sesama daerah berangka tinggi (membentuk klaster <i>hotspot</i>), begitu pula sebaliknya.
         </div>
     """, unsafe_allow_html=True)
 
     # Source & methodology note for the Moran's I index
     st.markdown("""
         <div style="background-color:rgba(128,128,128,0.05); border-radius:8px; padding:10px 12px; border:1px solid rgba(128,128,128,0.15); font-size:0.75rem; color:#64748b; line-height:1.5; margin-bottom:15px;">
-            <b>ℹ️ Metode & Sumber Indeks:</b> Indeks Moran's I dihitung dari data indikator makro <b>BPS Jawa Timur</b> dan <b>Dispendukcapil Provinsi Jawa Timur</b>, menggunakan matriks bobot spasial <i>k-nearest neighbors (k=4)</i> berbasis titik pusat (centroid) tiap kabupaten/kota. Nilai berkisar dari -1 (autokorelasi negatif sempurna) hingga +1 (autokorelasi positif sempurna); nilai mendekati 0 menandakan pola acak (tidak ada autokorelasi spasial).
+            <b>ℹ️ Metode & Sumber Indeks:</b> Indeks Moran's I dihitung dari data indikator makro <b>BPS Jawa Timur</b> dan <b>Dispendukcapil Provinsi Jawa Timur</b>, menggunakan matriks bobot spasial <i>k-nearest neighbors (k=4)</i> berbasis titik pusat (centroid) tiap kabupaten/kota.
         </div>
     """, unsafe_allow_html=True)
     

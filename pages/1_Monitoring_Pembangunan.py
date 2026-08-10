@@ -95,7 +95,7 @@ with col_right:
     st.markdown("<h4 style='font-size:1.1rem; font-weight:700; margin-bottom:15px;'>Visualisasi Utama Command Center</h4>", unsafe_allow_html=True)
     viz_type = st.radio(
         "Pilih Visualisasi:",
-        ["Tren Historis", "Distribusi Bar Chart", "Komparasi Radar Wilayah"],
+        ["Tren Historis", "Distribusi Bar Chart"],
         horizontal=True,
         label_visibility="collapsed"
     )
@@ -131,112 +131,6 @@ with col_right:
         )
         fig.update_layout(template=chart_theme, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_title=None)
         st.plotly_chart(fig, use_container_width=True)
-        
-    else:
-        # Radar Chart comparison
-        # Provincial averages
-        avg_miskin = df_year['jumlah_penduduk_miskin'].mean()
-        avg_ipm = df_year['ipm'].mean()
-        avg_tpt = df_year['tpt'].mean()
-        avg_density = df_year['kepadatan_sipil_tahunan'].mean()
-        avg_pop = df_year['jumlah_penduduk'].mean()
-        
-        categories = ['IPM', 'TPT', 'Penduduk Miskin', 'Kepadatan Penduduk', 'Total Penduduk']
-        
-        if selected_region == "Seluruh Jawa Timur":
-            # Compare highest poverty vs highest IPM dynamically
-            dist_max_poverty = df_year.loc[df_year['jumlah_penduduk_miskin'].idxmax()]
-            dist_max_ipm = df_year.loc[df_year['ipm'].idxmax()]
-            
-            val_pov_ipm = (dist_max_poverty['ipm'] / avg_ipm) * 100
-            val_pov_tpt = (dist_max_poverty['tpt'] / avg_tpt) * 100
-            val_pov_miskin = (dist_max_poverty['jumlah_penduduk_miskin'] / avg_miskin) * 100
-            val_pov_density = (dist_max_poverty['kepadatan_sipil_tahunan'] / avg_density) * 100
-            val_pov_pop = (dist_max_poverty['jumlah_penduduk'] / avg_pop) * 100
-            values_poverty = [val_pov_ipm, val_pov_tpt, val_pov_miskin, val_pov_density, val_pov_pop]
-            
-            val_ipm_ipm = (dist_max_ipm['ipm'] / avg_ipm) * 100
-            val_ipm_tpt = (dist_max_ipm['tpt'] / avg_tpt) * 100
-            val_ipm_miskin = (dist_max_ipm['jumlah_penduduk_miskin'] / avg_miskin) * 100
-            val_ipm_density = (dist_max_ipm['kepadatan_sipil_tahunan'] / avg_density) * 100
-            val_ipm_pop = (dist_max_ipm['jumlah_penduduk'] / avg_pop) * 100
-            values_ipm = [val_ipm_ipm, val_ipm_tpt, val_ipm_miskin, val_ipm_density, val_ipm_pop]
-            
-            values_province = [100, 100, 100, 100, 100]
-            
-            fig = go.Figure()
-            fig.add_trace(go.Scatterpolar(
-                r=values_poverty, theta=categories, fill='toself',
-                name=f"Kemiskinan Tertinggi ({dist_max_poverty['nama_wilayah']})",
-                fillcolor='rgba(239, 68, 68, 0.15)',
-                line=dict(color='#ef4444', width=2)
-            ))
-            fig.add_trace(go.Scatterpolar(
-                r=values_ipm, theta=categories, fill='toself',
-                name=f"IPM Tertinggi ({dist_max_ipm['nama_wilayah']})",
-                fillcolor='rgba(13, 148, 136, 0.15)',
-                line=dict(color='#0d9488', width=2)
-            ))
-            fig.add_trace(go.Scatterpolar(
-                r=values_province, theta=categories, fill='toself',
-                name='Rata-rata Jawa Timur', fillcolor='rgba(148, 163, 184, 0.05)',
-                line=dict(color='#94a3b8', width=1.5, dash='dash')
-            ))
-            
-            max_val_range = max(max(values_poverty), max(values_ipm))
-            fig.update_layout(
-                polar=dict(radialaxis=dict(visible=True, range=[0, max(max_val_range + 20, 140)])),
-                template=chart_theme, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                title=f"Profil Radar: Perbandingan Wilayah Ekstrem vs Rata-rata Provinsi (Rasio %)"
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            
-            st.markdown("""
-                <div style="background-color:rgba(59,130,246,0.06); border-radius:8px; padding:15px; border:1px solid rgba(59,130,246,0.15); font-size:0.85rem; line-height:1.5;">
-                    <b>Penjelasan Grafik Radar:</b><br>
-                    Grafik radar membandingkan profil multi-dimensi wilayah berdasarkan rasio persen (%) terhadap rata-rata provinsi (garis abu-abu putus-putus = 100%). 
-                    Grafik di atas membandingkan wilayah dengan angka <b>Kemiskinan Tertinggi</b> (Merah) dan <b>IPM Tertinggi</b> (Hijau Toska) 
-                    untuk melihat kontras struktur sosial kependudukan secara visual. Anda dapat memilih kabupaten/kota tertentu di dropdown atas untuk melihat profil daerah Anda sendiri.
-                </div>
-            """, unsafe_allow_html=True)
-            
-        else:
-            df_reg_sel = df_year[df_year['nama_wilayah'] == selected_region].iloc[0]
-            
-            val_ipm = (df_reg_sel['ipm'] / avg_ipm) * 100
-            val_tpt = (df_reg_sel['tpt'] / avg_tpt) * 100
-            val_miskin = (df_reg_sel['jumlah_penduduk_miskin'] / avg_miskin) * 100
-            val_density = (df_reg_sel['kepadatan_sipil_tahunan'] / avg_density) * 100
-            val_pop = (df_reg_sel['jumlah_penduduk'] / avg_pop) * 100
-            
-            values_region = [val_ipm, val_tpt, val_miskin, val_density, val_pop]
-            values_province = [100, 100, 100, 100, 100]
-            
-            fig = go.Figure()
-            fig.add_trace(go.Scatterpolar(
-                r=values_region, theta=categories, fill='toself',
-                name=selected_region, fillcolor='rgba(59, 130, 246, 0.2)',
-                line=dict(color='#3b82f6', width=2)
-            ))
-            fig.add_trace(go.Scatterpolar(
-                r=values_province, theta=categories, fill='toself',
-                name='Rata-rata Jawa Timur', fillcolor='rgba(148, 163, 184, 0.1)',
-                line=dict(color='#94a3b8', width=1.5, dash='dash')
-            ))
-            fig.update_layout(
-                polar=dict(radialaxis=dict(visible=True, range=[0, max(max(values_region) + 20, 140)])),
-                template=chart_theme, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                title=f"Profil Radar: {selected_region} vs Provinsi (Rasio %)"
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            
-            st.markdown("""
-                <div style="background-color:rgba(59,130,246,0.06); border-radius:8px; padding:15px; border:1px solid rgba(59,130,246,0.15); font-size:0.85rem; line-height:1.5;">
-                    <b>Penjelasan Grafik Radar:</b><br>
-                    Grafik radar di atas menunjukkan profil daerah <b>%s</b> terhadap rata-rata provinsi (100%%). 
-                    Sumbu yang menjorok keluar menunjukkan aspek di mana wilayah ini melebihi rata-rata provinsi, sedangkan sumbu yang menjorok ke dalam menunjukkan aspek di bawah rata-rata.
-                </div>
-            """ % selected_region, unsafe_allow_html=True)
 
 st.write("---")
 
@@ -307,6 +201,18 @@ with col_m4:
     )
 
 st.write("")
+st.write("")
+
+# Tabel Tingkat Pengangguran Terbuka (TPT) Kabupaten/Kota
+st.markdown(f"<h4 style='font-size:1.15rem; font-weight:700; margin-bottom:12px;'>Tabel Tingkat Pengangguran Terbuka (TPT) Kabupaten/Kota (Tahun {selected_year})</h4>", unsafe_allow_html=True)
+
+df_tpt_table = df_year[['nama_wilayah', 'tpt', 'laju_pertumbuhan']].sort_values(by='nama_wilayah').reset_index(drop=True)
+df_tpt_table.columns = ['Kabupaten/Kota', 'Tingkat Pengangguran Terbuka (TPT) (%)', 'Laju Pertumbuhan Penduduk (%)']
+
+df_tpt_table['Tingkat Pengangguran Terbuka (TPT) (%)'] = df_tpt_table['Tingkat Pengangguran Terbuka (TPT) (%)'].round(2)
+df_tpt_table['Laju Pertumbuhan Penduduk (%)'] = df_tpt_table['Laju Pertumbuhan Penduduk (%)'].round(2)
+
+st.dataframe(df_tpt_table, use_container_width=True, hide_index=True)
 st.markdown("""
     <div style="background-color:rgba(128,128,128,0.05); border-radius:8px; padding:12px 15px; border:1px solid rgba(128,128,128,0.15); font-size:0.8rem; color:#64748b; line-height:1.5; margin-top:20px;">
         <b>ℹ️ Sumber Data Indikator Pembangunan:</b><br>
