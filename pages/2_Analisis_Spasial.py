@@ -35,7 +35,7 @@ df = load_master()
 # Header Banner
 st.markdown("""
     <div class="dashboard-banner">
-        <div class="banner-title">GIS Control Center: Analisis Spasial</div>
+        <div class="banner-title">Analisis Spasial</div>
         <div class="banner-desc">
             Pusat analisis keterkaitan spasial kependudukan Jawa Timur. Pantau persebaran geografis indikator 
             dan deteksi klaster autokorelasi (Hotspot/Coldspot) menggunakan Moran's I Gauge.

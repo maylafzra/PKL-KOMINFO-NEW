@@ -30,7 +30,7 @@ df = load_master()
 # Header Banner
 st.markdown("""
     <div class="dashboard-banner">
-        <div class="banner-title">Decision Matrix Dashboard: SPK</div>
+        <div class="banner-title">Sistem Pendukung Keputusan</div>
         <div class="banner-desc">
             Sistem pendukung keputusan bagi formulasi kebijakan pembangunan Bappeda Jawa Timur. 
             Gunakan matriks interaktif untuk mengeksplorasi rekomendasi taktis khusus per daerah.

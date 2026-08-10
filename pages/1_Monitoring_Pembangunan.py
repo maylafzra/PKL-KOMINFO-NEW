@@ -26,7 +26,7 @@ df = load_master()
 # Header Banner
 st.markdown("""
     <div class="dashboard-banner">
-        <div class="banner-title">Command Center: Monitoring Pembangunan</div>
+        <div class="banner-title">Monitoring Pembangunan</div>
         <div class="banner-desc">
             Pusat pemantauan terpadu indikator makro Jawa Timur. Gunakan panel interaktif untuk menganalisis 
             pemeringkatan wilayah secara real-time dan mengevaluasi visualisasi komparatif pembangunan.
