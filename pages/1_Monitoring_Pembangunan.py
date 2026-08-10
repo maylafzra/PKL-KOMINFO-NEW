@@ -53,6 +53,14 @@ with col_f3:
 
 st.write("")
 
+# Label mapping used across all charts on this page so no raw column names
+# (with underscores) ever leak into axis titles, legends, or hover tooltips.
+axis_labels = {
+    **indicators,
+    "tahun": "Tahun",
+    "nama_wilayah": "Kabupaten/Kota",
+}
+
 # Dynamic data filter
 df_year = df[df['tahun'] == selected_year].copy()
 max_val = df_year[selected_ind].max()
@@ -109,7 +117,8 @@ with col_right:
             fig = px.line(
                 df_prov, x='tahun', y=selected_ind,
                 title=f"Tren Rata-rata Provinsi: {indicators[selected_ind]} (2018-2025)",
-                markers=True, color_discrete_sequence=[progress_color]
+                markers=True, color_discrete_sequence=[progress_color],
+                labels=axis_labels
             )
         else:
             # Selected region trends
@@ -117,7 +126,8 @@ with col_right:
             fig = px.line(
                 df_reg, x='tahun', y=selected_ind,
                 title=f"Tren Wilayah: {selected_region} - {indicators[selected_ind]} (2018-2025)",
-                markers=True, color_discrete_sequence=[progress_color]
+                markers=True, color_discrete_sequence=[progress_color],
+                labels=axis_labels
             )
         fig.update_layout(template=chart_theme, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
         st.plotly_chart(fig, use_container_width=True)
@@ -127,7 +137,8 @@ with col_right:
         fig = px.bar(
             df_sorted, x='nama_wilayah', y=selected_ind,
             color=selected_ind, color_continuous_scale='Reds' if selected_ind in ['jumlah_penduduk_miskin', 'tpt'] else 'Blues',
-            title=f"Distribusi Spasial {indicators[selected_ind]} ({selected_year})"
+            title=f"Distribusi Spasial {indicators[selected_ind]} ({selected_year})",
+            labels=axis_labels
         )
         fig.update_layout(template=chart_theme, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_title=None)
         st.plotly_chart(fig, use_container_width=True)
@@ -173,7 +184,7 @@ with col_m1:
         value=f"{total_poverty:,.1f} Ribu",
         change_val=change_poverty,
         is_positive_good=False,
-        border_color="#ef4444"
+        border_color="#354599"
     )
 with col_m2:
     render_metric_card(
@@ -181,7 +192,7 @@ with col_m2:
         value=f"{avg_ipm_prov:.2f}",
         change_val=change_ipm,
         is_positive_good=True,
-        border_color="#0d9488"
+        border_color="#354599"
     )
 with col_m3:
     render_metric_card(
@@ -189,7 +200,7 @@ with col_m3:
         value=f"{avg_tpt_prov:.2f} %",
         change_val=change_tpt,
         is_positive_good=False,
-        border_color="#d97706"
+        border_color="#354599"
     )
 with col_m4:
     render_metric_card(
@@ -197,7 +208,7 @@ with col_m4:
         value=f"{avg_dens_prov:,.1f} Jiwa/KM²",
         change_val=change_dens,
         is_positive_good=False,
-        border_color="#8b5cf6"
+        border_color="#354599"
     )
 
 st.write("")

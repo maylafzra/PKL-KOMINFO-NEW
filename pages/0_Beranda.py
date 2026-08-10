@@ -50,7 +50,7 @@ logo_kominfo_b64 = find_and_encode(ASSETS_DIR, "logo_kominfo")
 logo_unair_b64 = find_and_encode(ASSETS_DIR, "logo_unair")
 logo_ftmm_b64 = find_and_encode(ASSETS_DIR, "logo_ftmm")
 logo_lengkap_b64 = find_and_encode(ASSETS_DIR, "logo_lengkap")
-hero_bg_b64 = find_and_encode(ASSETS_DIR, "hero_bromo")
+hero_bg_b64 = find_and_encode(ASSETS_DIR, "logo_pembangunan")
 
 # Header Logos Strip with Rentang Periode & Integrasi on the top-right
 logo_html = '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid rgba(128,128,128,0.15);">'
@@ -81,20 +81,17 @@ logo_html += "</div>"
 
 st.markdown(logo_html, unsafe_allow_html=True)
 
-# Custom Hero Card Style with Bromo Background
-hero_style = ""
-if hero_bg_b64:
-    hero_style = f"""
-    background: var(--hero-gradient), url('{hero_bg_b64}');
-    background-size: cover;
-    background-position: center;
-    """
-else:
-    hero_style = "background: linear-gradient(180deg, var(--secondary-background-color) 0%, var(--background-color) 100%);"
-
+# Custom Hero Card Style with pembangunan Background
+hero_style = f"""
+background: var(--hero-gradient), url('{hero_bg_b64}');
+background-size: 100% auto;
+background-position: center bottom;
+background-repeat: no-repeat;
+background-color: #eaf3f8;
+"""
 st.markdown(
     f"""
-    <div style="{hero_style} border-radius: 12px; padding: 50px 40px; border: 1px solid rgba(128,128,128,0.2); margin-bottom: 35px;">
+    <div style="{hero_style}  min-height: 430px; border-radius: 12px; padding: 50px 40px; border: 1px solid rgba(128,128,128,0.2); margin-bottom: 35px; overflow: hidden;">
         <h1 style="color: #354599; font-size: 2.2rem; font-weight: 800; margin-bottom: 8px;">
             Sistem Informasi Monitoring Pembangunan Daerah
         </h1>
@@ -225,7 +222,7 @@ with col_f3:
                 <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em;">Review Model & Prioritas:</span>
                 <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
                     <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
-                        <span>🤖 Algoritma Utama</span><b style="color: #d97706;">XGBoost / RF</b>
+                        <span>🤖 Algoritma Utama</span><b style="color: #d97706;">Random Forest</b>
                     </div>
                     <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
                         <span>🎯 Target Proyeksi</span><b style="color: #0d9488;">Tahun 2026 - 2028</b>
