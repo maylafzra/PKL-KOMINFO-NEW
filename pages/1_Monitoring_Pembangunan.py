@@ -133,14 +133,26 @@ with col_right:
         st.plotly_chart(fig, use_container_width=True)
         
     elif viz_type == "Distribusi Bar Chart":
-        # Grouped bar chart for all regions
-        fig = px.bar(
-            df_sorted, x='nama_wilayah', y=selected_ind,
-            color=selected_ind, color_continuous_scale='Reds' if selected_ind in ['jumlah_penduduk_miskin', 'tpt'] else 'Blues',
-            title=f"Distribusi Spasial {indicators[selected_ind]} ({selected_year})",
-            labels=axis_labels
-        )
-        fig.update_layout(template=chart_theme, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_title=None)
+        if selected_region == "Seluruh Jawa Timur":
+            # Grouped bar chart for all regions
+            fig = px.bar(
+                df_sorted, x='nama_wilayah', y=selected_ind,
+                color=selected_ind, color_continuous_scale='Reds' if selected_ind in ['jumlah_penduduk_miskin', 'tpt'] else 'Blues',
+                title=f"Distribusi Spasial {indicators[selected_ind]} ({selected_year})",
+                labels=axis_labels
+            )
+            fig.update_layout(template=chart_theme, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', xaxis_title=None)
+        else:
+            # Per-year bar chart for the selected region
+            df_reg = df[df['nama_wilayah'] == selected_region].sort_values(by='tahun')
+            fig = px.bar(
+                df_reg, x='tahun', y=selected_ind,
+                color=selected_ind, color_continuous_scale='Reds' if selected_ind in ['jumlah_penduduk_miskin', 'tpt'] else 'Blues',
+                title=f"Distribusi Tahunan Wilayah: {selected_region} - {indicators[selected_ind]} (2018-2025)",
+                labels=axis_labels
+            )
+            fig.update_layout(template=chart_theme, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+
         st.plotly_chart(fig, use_container_width=True)
 
 st.write("---")

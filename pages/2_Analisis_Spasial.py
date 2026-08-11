@@ -101,25 +101,55 @@ labels_dict = {
 df_yr = df[df['tahun'] == selected_year].copy().reset_index(drop=True)
 num_regions = len(df_yr)
 
-# Spatial Weights Matrix (k=4 Nearest Neighbors)
-W = np.zeros((num_regions, num_regions))
-codes = list(df_yr['kode_wilayah'].astype(str))
+@st.cache_data(show_spinner="Menghitung matriks ketetanggaan wilayah (queen contiguity)...")
+def get_spatial_adjacency(_geojson):
+    """
+    Membangun matriks ketetanggaan berdasarkan KONTIGUITAS POLIGON (queen contiguity):
+    dua wilayah dianggap tetangga kalau batas administratifnya benar-benar
+    bersinggungan/berbatasan langsung -- bukan sekadar berdasarkan jarak titik pusat.
+    Ini metode standar yang dipakai software analisis spasial (mis. GeoDa).
+    """
+    from shapely.geometry import shape
+    feats = _geojson['features']
+    codes = [f['properties'].get('CC_2') for f in feats]
+    polys = [shape(f['geometry']).buffer(0) for f in feats]  # buffer(0) membenarkan geometri yang sedikit tidak valid
 
-for i in range(num_regions):
-    c1 = codes[i]
-    coord1 = np.array(centroids.get(c1, (112.0, -7.5)))
-    distances = []
-    for j in range(num_regions):
-        if i == j:
-            distances.append((np.inf, j))
-            continue
-        c2 = codes[j]
-        coord2 = np.array(centroids.get(c2, (112.0, -7.5)))
-        dist = np.linalg.norm(coord1 - coord2)
-        distances.append((dist, j))
-    distances.sort()
-    for d, idx in distances[:4]:
-        W[i, idx] = 1.0
+    n = len(feats)
+    W = np.zeros((n, n))
+    BUFFER = 0.01  # ~1 km toleransi celah kecil antar batas poligon (presisi data GADM/GeoJSON)
+    for i in range(n):
+        for j in range(n):
+            if i == j:
+                continue
+            if polys[i].distance(polys[j]) < BUFFER:
+                W[i, j] = 1.0
+    return codes, W
+
+# Spatial Weights Matrix (Queen Contiguity -- berbasis batas poligon administratif)
+if geojson_success:
+    codes_geo, W_geo = get_spatial_adjacency(geojson_jt)
+    code_to_geo_idx = {c: i for i, c in enumerate(codes_geo)}
+    df_yr_codes = df_yr['kode_wilayah'].astype(str).tolist()
+    order = [code_to_geo_idx[c] for c in df_yr_codes]
+    W = W_geo[np.ix_(order, order)]
+else:
+    # Fallback kalau GeoJSON gagal dimuat: pakai k=4 nearest neighbor berbasis centroid
+    codes = list(df_yr['kode_wilayah'].astype(str))
+    W = np.zeros((num_regions, num_regions))
+    for i in range(num_regions):
+        c1 = codes[i]
+        coord1 = np.array(centroids.get(c1, (112.0, -7.5)))
+        distances = []
+        for j in range(num_regions):
+            if i == j:
+                distances.append((np.inf, j))
+                continue
+            c2 = codes[j]
+            coord2 = np.array(centroids.get(c2, (112.0, -7.5)))
+            distances.append((np.linalg.norm(coord1 - coord2), j))
+        distances.sort()
+        for d, idx in distances[:4]:
+            W[i, idx] = 1.0
 
 # Row standardization
 for i in range(num_regions):

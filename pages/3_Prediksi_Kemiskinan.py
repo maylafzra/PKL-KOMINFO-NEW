@@ -72,7 +72,7 @@ with col_left:
     
     # Penjelasan Model Random Forest
     st.markdown(f"""
-        <div style="background-color: rgba(13, 148, 136, 0.04); border-left: 4px solid #0d9488; border-radius: 6px; padding: 16px; margin-bottom: 24px;">
+        <div style="background-color: rgba(13, 148, 136, 0.04); border-left: 4px solid #0d9488; border-radius: 6px; padding: 16px; margin-bottom: 16px;">
             <h5 style="margin-top: 0; margin-bottom: 8px; color: #0d9488; font-weight: 700; font-size: 0.92rem; text-transform: uppercase; letter-spacing: 0.05em;">Model: Random Forest Regressor</h5>
             <p style="margin: 0 0 10px 0; font-size: 0.8rem; line-height: 1.5;">
                 <b>Cara Kerja:</b> Membangun kumpulan 100 pohon keputusan secara independen. Setiap pohon mempelajari pola data historis secara acak, kemudian hasil prediksinya dirata-ratakan (agregasi) untuk menghasilkan estimasi akhir yang stabil dan minim varians.
@@ -82,6 +82,38 @@ with col_left:
             </p>
         </div>
     """, unsafe_allow_html=True)
+
+    # Rumus & Perhitungan Model (BARU)
+    with st.expander("📐 Lihat Rumus & Cara Perhitungan Model"):
+        st.markdown("**1. Pemisahan (splitting) tiap node pohon**")
+        st.markdown("Setiap pohon mencari titik pemisah fitur yang meminimalkan variansi (Mean Squared Error) data di dalam node:")
+        st.latex(r"MSE = \frac{1}{n} \sum_{i=1}^{n} (y_i - \bar{y})^2")
+
+        st.markdown("**2. Prediksi satu pohon**")
+        st.markdown("Prediksi untuk data baru $x$ adalah rata-rata nilai target di leaf node tempat $x$ jatuh:")
+        st.latex(r"T_b(x) = \frac{1}{N_{leaf}} \sum_{i \in leaf(x)} y_i")
+
+        st.markdown("**3. Prediksi akhir Random Forest**")
+        st.markdown("Hasil akhir adalah rata-rata prediksi seluruh $B=100$ pohon yang dibangun independen dari sub-sampel data acak (bootstrap):")
+        st.latex(r"\hat{y}(x) = \frac{1}{B} \sum_{b=1}^{B} T_b(x)")
+
+        st.markdown("**Contoh perhitungan nyata dari model ini** (data uji tahun 2025):")
+        contoh_wilayah = df_test_clean['nama_wilayah'].iloc[0]
+        contoh_X = X_test.iloc[[0]]
+        pred_per_tree = np.array([tree.predict(contoh_X)[0] for tree in model.estimators_])
+
+        contoh_df = pd.DataFrame({
+            "Pohon ke-": ["1", "2", "3", "...", "100"],
+            "Prediksi (Ribu Jiwa)": [
+                f"{pred_per_tree[0]:.3f}", f"{pred_per_tree[1]:.3f}", f"{pred_per_tree[2]:.3f}",
+                "...", f"{pred_per_tree[-1]:.3f}"
+            ]
+        })
+        st.dataframe(contoh_df, use_container_width=True, hide_index=True)
+
+        st.markdown(f"Rata-rata dari seluruh 100 pohon untuk wilayah **{contoh_wilayah}**:")
+        st.latex(rf"\hat{{y}} = \frac{{1}}{{100}}\sum_{{b=1}}^{{100}} T_b(x) = {pred_per_tree.mean():.3f}\ \text{{ribu jiwa}}")
+        st.caption(f"Nilai ini sama dengan hasil model.predict(): {model.predict(contoh_X)[0]:.3f} ribu jiwa — membuktikan prediksi akhir memang dihitung dari rata-rata seluruh pohon.")
     
     # 2. Display Model Performance & Conceptual Explanation
     st.markdown("<h5 style='font-size:0.92rem; font-weight:700; margin-bottom:12px;'>Akurasi Uji Validasi (Tahun 2025)</h5>", unsafe_allow_html=True)
@@ -103,7 +135,7 @@ with col_left:
             <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px;">Mean Absolute Pct Error (MAPE)</div>
             <div style="font-size: 1.6rem; color: var(--text-color); font-weight: 700; margin-bottom: 4px; line-height: 1.1;">{mape:.2f} %</div>
             <div style="font-size: 0.75rem; color: #64748b; line-height: 1.4;">
-                <b>Makna:</b> Rata-rata persentase penyimpangan estimasi adalah <b>{mape:.2f}%</b> (tergolong akurasi sangat tinggi/di bawah 10%).
+                <b>Makna:</b> Rata-rata persentase penyimpangan estimasi adalah <b>{mape:.2f}%</b>.
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -255,6 +287,7 @@ with col_tbl1:
 with col_tbl2:
     search_tbl = st.text_input("Saring Berdasarkan Nama Daerah:", "", key="tbl_search_q", placeholder="Cari kabupaten/kota...")
 
+# Hanya 4 kolom: kode wilayah, kabupaten/kota, tipe wilayah, prediksi kemiskinan (ribu jiwa)
 df_table_year = df_forecast[df_forecast['tahun'] == selected_proj_year][['kode_wilayah', 'nama_wilayah', 'tipe_wilayah', 'jumlah_penduduk_miskin_pred']].copy()
 df_table_year = df_table_year.rename(columns={
     'kode_wilayah': 'Kode Wilayah',
@@ -264,9 +297,18 @@ df_table_year = df_table_year.rename(columns={
 }).reset_index(drop=True)
 
 df_table_year[f'Prediksi Kemiskinan {selected_proj_year} (Ribu Jiwa)'] = df_table_year[f'Prediksi Kemiskinan {selected_proj_year} (Ribu Jiwa)'].round(3)
-df_table_year['Estimasi Jumlah Penduduk Miskin (Jiwa)'] = (df_table_year[f'Prediksi Kemiskinan {selected_proj_year} (Ribu Jiwa)'] * 1000).round(0)
 
 if search_tbl:
     df_table_year = df_table_year[df_table_year['Kabupaten/Kota'].str.contains(search_tbl, case=False)]
     
 st.dataframe(df_table_year, use_container_width=True, hide_index=True)
+
+# Sumber data (BARU, gaya sama seperti halaman lain)
+st.markdown("""
+    <div style="background-color:rgba(128,128,128,0.05); border-radius:8px; padding:12px 15px; border:1px solid rgba(128,128,128,0.15); font-size:0.8rem; color:#64748b; line-height:1.5; margin-top:20px;">
+        <b>ℹ️ Sumber Data & Metodologi Proyeksi:</b><br>
+        1. Data historis <b>Jumlah Penduduk Miskin, IPM, TPT</b> bersumber dari <b>Badan Pusat Statistik (BPS) Provinsi Jawa Timur</b> (Periode 2018–2025).<br>
+        2. Data <b>Kepadatan Penduduk Sipil</b> bersumber dari <b>Dinas Kependudukan dan Pencatatan Sipil (Dispendukcapil) Provinsi Jawa Timur</b>.<br>
+        3. Proyeksi 2026–2028 dihasilkan dari model <b>Random Forest Regressor</b> yang dilatih pada data historis 2018–2024, dengan variabel penjelas diproyeksikan terlebih dahulu menggunakan <b>Linear Regression</b>.
+    </div>
+""", unsafe_allow_html=True)
