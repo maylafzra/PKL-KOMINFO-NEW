@@ -116,7 +116,7 @@ def get_spatial_adjacency(_geojson):
 
     n = len(feats)
     W = np.zeros((n, n))
-    BUFFER = 0.01  # ~1 km toleransi celah kecil antar batas poligon (presisi data GADM/GeoJSON)
+    BUFFER = 0.001  # ~100 meter toleransi celah kecil antar batas poligon (Queen Contiguity yang akurat)
     for i in range(n):
         for j in range(n):
             if i == j:
@@ -168,13 +168,13 @@ lag_std = spatial_lag / np.std(x)
 
 for i in range(num_regions):
     if z_std[i] > 0 and lag_std[i] > 0:
-        lisa_types.append('High-High (Hotspot)')
+        lisa_types.append('High-High (Sangat Tinggi)')
     elif z_std[i] < 0 and lag_std[i] < 0:
-        lisa_types.append('Low-Low (Coldspot)')
+        lisa_types.append('Low-Low (Rendah)')
     elif z_std[i] > 0 and lag_std[i] < 0:
-        lisa_types.append('High-Low (Outlier)')
+        lisa_types.append('High-Low (Tinggi)')
     else:
-        lisa_types.append('Low-High (Outlier)')
+        lisa_types.append('Low-High (Sedang)')
 
 df_yr['lisa_cluster'] = lisa_types
 df_yr['kode_wilayah_str'] = df_yr['kode_wilayah'].astype(str)
@@ -260,10 +260,10 @@ with col_left:
                 df_yr, geojson=geojson_jt, locations='kode_wilayah_str',
                 featureidkey='properties.CC_2', color='lisa_cluster',
                 color_discrete_map={
-                    'High-High (Hotspot)': '#ef4444',
-                    'Low-Low (Coldspot)': '#0d9488',
-                    'High-Low (Outlier)': '#d97706',
-                    'Low-High (Outlier)': '#3b82f6'
+                    'High-High (Sangat Tinggi)': '#ef4444',
+                    'High-Low (Tinggi)': '#f97316',
+                    'Low-High (Sedang)': '#3b82f6',
+                    'Low-Low (Rendah)': '#10b981'
                 },
                 mapbox_style=mapbox_style,
                 center={"lat": -7.7, "lon": 112.5},
@@ -301,10 +301,10 @@ with col_left:
             fig = px.scatter_mapbox(
                 df_yr, lat='lat', lon='lon', size='jumlah_penduduk', color='lisa_cluster',
                 color_discrete_map={
-                    'High-High (Hotspot)': '#ef4444',
-                    'Low-Low (Coldspot)': '#0d9488',
-                    'High-Low (Outlier)': '#d97706',
-                    'Low-High (Outlier)': '#3b82f6'
+                    'High-High (Sangat Tinggi)': '#ef4444',
+                    'High-Low (Tinggi)': '#f97316',
+                    'Low-High (Sedang)': '#3b82f6',
+                    'Low-Low (Rendah)': '#10b981'
                 },
                 hover_name='nama_wilayah', size_max=25, zoom=7,
                 title=f"Klaster LISA {indicators[selected_ind]} ({selected_year})",
@@ -410,13 +410,48 @@ with col_right:
     # Source & methodology note for the Moran's I index
     st.markdown("""
         <div style="background-color:rgba(128,128,128,0.05); border-radius:8px; padding:10px 12px; border:1px solid rgba(128,128,128,0.15); font-size:0.75rem; color:#64748b; line-height:1.5; margin-bottom:15px;">
-            <b>ℹ️ Metode & Sumber Indeks:</b> Indeks Moran's I dihitung dari data indikator makro <b>BPS Jawa Timur</b> dan <b>Dispendukcapil Provinsi Jawa Timur</b>, menggunakan matriks bobot spasial <i>k-nearest neighbors (k=4)</i> berbasis titik pusat (centroid) tiap kabupaten/kota.
+            <b>ℹ️ Metode & Sumber Indeks:</b> Indeks Moran's I dihitung dari data indikator makro <b>BPS Jawa Timur</b> dan <b>Dispendukcapil Provinsi Jawa Timur</b>, menggunakan matriks bobot spasial Queen Contiguity (berbasis batas administrasi poligon) atau k-nearest neighbors (k=4) sebagai fallback.
         </div>
     """, unsafe_allow_html=True)
     
+    with st.expander("📚 Dasar Statistik & Perhitungan Klaster LISA (Untuk Ujian/Akademis)"):
+        st.markdown(r"""
+            ### 1. Landasan Teoretis LISA (Anselin, 1995)
+            *Local Indicators of Spatial Association* (LISA) digunakan untuk mengukur seberapa besar kontribusi suatu wilayah secara individual terhadap pembentukan hubungan keruangan (autokorelasi spasial). Ini mendeteksi apakah suatu daerah dikelilingi oleh wilayah bertetangga yang memiliki karakteristik serupa (klaster homogen) atau bertolak belakang (pencilan/outlier).
+            
+            ### 2. Formulasi Matematika & Perhitungan
+            Indeks **Local Moran's $I_i$** untuk masing-masing wilayah $i$ dihitung sebagai berikut:
+            $$I_i = \frac{z_i - \bar{z}}{s^2} \sum_{j=1}^{N} w_{ij} (z_j - \bar{z})$$
+            Karena data deviasi terhadap rata-rata ($z_i$) sudah dipusatkan ($\bar{z} = 0$), maka rumusnya disederhanakan menjadi:
+            $$I_i = \frac{z_i}{s^2} \sum_{j=1}^{N} w_{ij} z_j$$
+            Di mana:
+            - $N$ = Jumlah kabupaten/kota di Jawa Timur ($38$).
+            - $z_i$ = Deviasi nilai indikator wilayah $i$ terhadap rata-rata ($x_i - \bar{x}$).
+            - $s^2$ = Varians dari variabel indikator tersebut.
+            - $w_{ij}$ = Elemen matriks bobot spasial Queen Contiguity terstandarisasi baris ($\sum_j w_{ij} = 1$).
+            - $\sum_{j=1}^{N} w_{ij} z_j$ = **Spatial Lag** dari wilayah $i$ (rata-rata tertimbang dari nilai tetangganya).
+            
+            ### 3. Dasar Keputusan Pengelompokan Kuadran Moran
+            Klasifikasi wilayah didasarkan pada perpaduan tanda positif/negatif koordinat wilayah pada diagram kartesius **Moran Scatterplot**:
+            
+            *   **High-High (Sangat Tinggi)**
+                *   *Syarat*: $z_i > 0$ dan $\text{Lag}_i > 0$.
+                *   *Landasan*: Wilayah bernilai tinggi dikelilingi tetangga bernilai tinggi (*hotspot*). Memerlukan koordinasi lintas wilayah karena adanya dampak penularan spasial (*spatial spillover*).
+            *   **High-Low (Tinggi)**
+                *   *Syarat*: $z_i > 0$ dan $\text{Lag}_i < 0$.
+                *   *Landasan*: Wilayah bernilai tinggi dikelilingi tetangga bernilai rendah (*outlier HL*). Merupakan wilayah kantong kemiskinan terisolasi, membutuhkan bantuan lokal terfokus.
+            *   **Low-High (Sedang)**
+                *   *Syarat*: $z_i < 0$ dan $\text{Lag}_i > 0$.
+                *   *Landasan*: Wilayah bernilai rendah dikelilingi tetangga bernilai tinggi (*outlier LH*). Wilayah ini bertindak sebagai penyangga (*buffer*), tetapi rentan terpengaruh dampak buruk wilayah sekitar.
+            *   **Low-Low (Rendah)**
+                *   *Syarat*: $z_i < 0$ dan $\text{Lag}_i < 0$.
+                *   *Landasan*: Wilayah bernilai rendah dikelilingi tetangga bernilai rendah (*coldspot*). Menunjukkan kestabilan wilayah dengan tingkat kemakmuran sosial ekonomi yang baik.
+        """)
+
+    
     # 2. Cluster Hotspot & Coldspot Lists
-    st.markdown("<h5 style='font-size:0.92rem; font-weight:700;'>Identifikasi Daerah Hotspot (High-High)</h5>", unsafe_allow_html=True)
-    hh_districts = df_yr[df_yr['lisa_cluster'] == 'High-High (Hotspot)']['nama_wilayah'].tolist()
+    st.markdown("<h5 style='font-size:0.92rem; font-weight:700;'>Identifikasi Daerah Hotspot (High-High - Sangat Tinggi)</h5>", unsafe_allow_html=True)
+    hh_districts = df_yr[df_yr['lisa_cluster'] == 'High-High (Sangat Tinggi)']['nama_wilayah'].tolist()
     if hh_districts:
         hh_html = '<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:15px;">'
         for d in hh_districts[:8]: # Cap at 8 for layout elegance
@@ -428,8 +463,8 @@ with col_right:
     else:
         st.markdown("<div style='font-size:0.8rem; color:#64748b; margin-bottom:15px;'>Tidak terdeteksi wilayah hotspot.</div>", unsafe_allow_html=True)
         
-    st.markdown("<h5 style='font-size:0.92rem; font-weight:700;'>Identifikasi Daerah Coldspot (Low-Low)</h5>", unsafe_allow_html=True)
-    ll_districts = df_yr[df_yr['lisa_cluster'] == 'Low-Low (Coldspot)']['nama_wilayah'].tolist()
+    st.markdown("<h5 style='font-size:0.92rem; font-weight:700;'>Identifikasi Daerah Coldspot (Low-Low - Rendah)</h5>", unsafe_allow_html=True)
+    ll_districts = df_yr[df_yr['lisa_cluster'] == 'Low-Low (Rendah)']['nama_wilayah'].tolist()
     if ll_districts:
         ll_html = '<div style="display:flex; flex-wrap:wrap; gap:6px;">'
         for d in ll_districts[:8]:
