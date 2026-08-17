@@ -61,12 +61,18 @@ def load_master():
             ORDER BY w.kode_wilayah, p.tahun;
         """
         df = pd.read_sql(query, conn)
+        # Perbaikan skala data jumlah penduduk tahun 2025 yang salah input (satuan vs ribuan)
+        if 'jumlah_penduduk' in df.columns:
+            df.loc[df['jumlah_penduduk'] > 10000, 'jumlah_penduduk'] /= 1000
         return df
     except Exception as e:
         # Jika koneksi gagal, gunakan fallback ke file CSV lokal
         # (Sangat membantu ketika pengguna belum setup phpMyAdmin)
         if CSV_PATH.exists():
-            return pd.read_csv(CSV_PATH)
+            df_csv = pd.read_csv(CSV_PATH)
+            if 'jumlah_penduduk' in df_csv.columns:
+                df_csv.loc[df_csv['jumlah_penduduk'] > 10000, 'jumlah_penduduk'] /= 1000
+            return df_csv
         else:
             raise FileNotFoundError(
                 f"Data master tidak dapat ditemukan. \n"
